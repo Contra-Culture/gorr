@@ -18,13 +18,13 @@ func main() {
 		// NodeHeader
 		// Resource
 		r.Root("root", "root descr", func(n *gorr.NodeProxy) {
-			n.Method(gorr.GET, respondWithURL)
+			n.Method("root", "responds with URL", gorr.GET, respondWithURL)
 			n.Node("articles", "articles resource", gorr.Matches("articles"), func(n *gorr.NodeProxy) {
-				n.Method(gorr.GET, respondWithArticles)
-				n.Method(gorr.POST, createArticle)
-			})
-			n.Node("<article-slug>", "single article by its slug", func(slug string) bool { return slug == "my-article" }, func(n *gorr.NodeProxy) {
-				n.Method(gorr.GET, respondWithArticle)
+				n.Method("get-articles", "provides articles", gorr.GET, respondWithArticles)
+				n.Method("create-article", "creates article", gorr.POST, createArticle)
+				n.Node("<article-slug>", "single article resource by slug", func(slug string) bool { return slug == "my-article" }, func(n *gorr.NodeProxy) {
+					n.Method("get-article", "provides article by its slug", gorr.GET, respondWithArticle)
+				})
 			})
 		})
 	})

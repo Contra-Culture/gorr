@@ -6,14 +6,19 @@ import (
 )
 
 type (
-	Handler    func(http.ResponseWriter, *http.Request, map[string]string)
+	Handler func(http.ResponseWriter, *http.Request, map[string]string)
+	Method  struct {
+		title       string
+		description string
+		handler     Handler
+	}
 	HTTPMethod int
 	Matcher    func(string) bool
 	Node       struct {
 		title       string
 		description string
 		match       Matcher
-		methods     [10]*Handler
+		methods     [10]*Method
 		children    []*Node
 	}
 
@@ -106,7 +111,7 @@ func (n *Node) Match(method string, chunks *Chunker) (h *Handler, err error) {
 	}
 	hasNext := chunks.Next()
 	if !hasNext {
-		h = n.methods[StringToMethod(method)]
+		h = &n.methods[StringToMethod(method)].handler
 		return
 	}
 	for _, ch := range n.children {
@@ -142,7 +147,7 @@ func (p *NodeProxy) Node(title, description string, match Matcher, conf NodeConf
 	}
 	p.node.children = append(p.node.children, node)
 }
-func (n *NodeProxy) Method(m HTTPMethod, h Handler) {
+func (n *NodeProxy) Method(t, d string, m HTTPMethod, h Handler) {
 	if n.err != nil {
 		return
 	}
@@ -151,7 +156,11 @@ func (n *NodeProxy) Method(m HTTPMethod, h Handler) {
 		n.err = handlersAlreadySpecifiedErrors[idx]
 		return
 	}
-	n.node.methods[idx] = &h
+	n.node.methods[idx] = &Method{
+		title:       t,
+		description: d,
+		handler:     h,
+	}
 }
 func (n *Node) isEmpty() bool {
 	if len(n.children) > 0 {
