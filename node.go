@@ -142,7 +142,7 @@ func (p *NodeProxy) Node(title, description string, match Matcher, conf NodeConf
 	}
 	p.node.children = append(p.node.children, node)
 }
-func (n *NodeProxy) On(m HTTPMethod, h Handler) {
+func (n *NodeProxy) Method(m HTTPMethod, h Handler) {
 	if n.err != nil {
 		return
 	}

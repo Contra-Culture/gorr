@@ -27,13 +27,13 @@ var _ = Describe("gorr", func() {
 				// ... and can be specified only one
 				router, err = New(func(r *RouterProxy) {
 					r.Root("root", "root node", func(n *NodeProxy) {
-						n.On(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+						n.Method(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 							w.Write([]byte("ok"))
 							w.WriteHeader(http.StatusFound)
 						})
 					})
 					r.Root("root", "root node", func(n *NodeProxy) {
-						n.On(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+						n.Method(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 							w.Write([]byte("ok"))
 							w.WriteHeader(http.StatusFound)
 						})
@@ -45,7 +45,7 @@ var _ = Describe("gorr", func() {
 				// "not found" route handler is required!
 				router, err = New(func(r *RouterProxy) {
 					r.Root("root", "root node", func(n *NodeProxy) {
-						n.On(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+						n.Method(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 							w.Write([]byte("ok"))
 							w.WriteHeader(http.StatusFound)
 						})
@@ -57,7 +57,7 @@ var _ = Describe("gorr", func() {
 				// ... and can be specified only once
 				router, err = New(func(r *RouterProxy) {
 					r.Root("root", "root node", func(n *NodeProxy) {
-						n.On(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+						n.Method(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 							w.Write([]byte("ok"))
 							w.WriteHeader(http.StatusFound)
 						})
@@ -71,7 +71,7 @@ var _ = Describe("gorr", func() {
 				// "method not allowed" handler is required!
 				router, err = New(func(r *RouterProxy) {
 					r.Root("root", "root node", func(n *NodeProxy) {
-						n.On(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+						n.Method(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 							w.Write([]byte("ok"))
 							w.WriteHeader(http.StatusFound)
 						})
@@ -84,7 +84,7 @@ var _ = Describe("gorr", func() {
 				// ... and can be specified only once
 				router, err = New(func(r *RouterProxy) {
 					r.Root("root", "root node", func(n *NodeProxy) {
-						n.On(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+						n.Method(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 							w.Write([]byte("ok"))
 							w.WriteHeader(http.StatusFound)
 						})
@@ -99,7 +99,7 @@ var _ = Describe("gorr", func() {
 				// "internal server error" handler is required!
 				router, err = New(func(r *RouterProxy) {
 					r.Root("root", "root node", func(n *NodeProxy) {
-						n.On(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+						n.Method(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 							w.Write([]byte("ok"))
 							w.WriteHeader(http.StatusFound)
 						})
@@ -113,7 +113,7 @@ var _ = Describe("gorr", func() {
 				// ... and can be specified only once
 				router, err = New(func(r *RouterProxy) {
 					r.Root("root", "root node", func(n *NodeProxy) {
-						n.On(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+						n.Method(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 							w.Write([]byte("ok"))
 							w.WriteHeader(http.StatusFound)
 						})
@@ -131,7 +131,7 @@ var _ = Describe("gorr", func() {
 			It("returns router", func() {
 				router, err = New(func(r *RouterProxy) {
 					r.Root("root", "root node", func(n *NodeProxy) {
-						n.On(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+						n.Method(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 							w.Write([]byte("ok"))
 							w.WriteHeader(http.StatusFound)
 						})
@@ -165,8 +165,8 @@ var _ = Describe("gorr", func() {
 				// only one handler for GET HTTP method can be specified
 				router, err = New(func(r *RouterProxy) {
 					r.Root("root", "root node", func(n *NodeProxy) {
-						n.On(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
-						n.On(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
+						n.Method(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
+						n.Method(GET, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
 					})
 					r.OnError(NotFoundError, dumbHandler)
 					r.OnError(MethodNotAllowedError, dumbHandler)
@@ -178,8 +178,8 @@ var _ = Describe("gorr", func() {
 				// only one handler for HEAD HTTP method can be specified
 				router, err = New(func(r *RouterProxy) {
 					r.Root("root", "root node", func(n *NodeProxy) {
-						n.On(HEAD, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
-						n.On(HEAD, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
+						n.Method(HEAD, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
+						n.Method(HEAD, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
 					})
 					r.OnError(NotFoundError, dumbHandler)
 					r.OnError(MethodNotAllowedError, dumbHandler)
@@ -191,8 +191,8 @@ var _ = Describe("gorr", func() {
 				// only one handler for POST HTTP method can be specified
 				router, err = New(func(r *RouterProxy) {
 					r.Root("root", "root node", func(n *NodeProxy) {
-						n.On(POST, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
-						n.On(POST, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
+						n.Method(POST, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
+						n.Method(POST, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
 					})
 					r.OnError(NotFoundError, dumbHandler)
 					r.OnError(MethodNotAllowedError, dumbHandler)
@@ -204,8 +204,8 @@ var _ = Describe("gorr", func() {
 				// only one handler for PUT HTTP method can be specified
 				router, err = New(func(r *RouterProxy) {
 					r.Root("root", "root node", func(n *NodeProxy) {
-						n.On(PUT, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
-						n.On(PUT, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
+						n.Method(PUT, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
+						n.Method(PUT, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
 					})
 					r.OnError(NotFoundError, dumbHandler)
 					r.OnError(MethodNotAllowedError, dumbHandler)
@@ -217,8 +217,8 @@ var _ = Describe("gorr", func() {
 				// only one handler for DELETE HTTP method can be specified
 				router, err = New(func(r *RouterProxy) {
 					r.Root("root", "root node", func(n *NodeProxy) {
-						n.On(DELETE, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
-						n.On(DELETE, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
+						n.Method(DELETE, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
+						n.Method(DELETE, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
 					})
 					r.OnError(NotFoundError, dumbHandler)
 					r.OnError(MethodNotAllowedError, dumbHandler)
@@ -230,8 +230,8 @@ var _ = Describe("gorr", func() {
 				// only one handler for CONNECT HTTP method can be specified
 				router, err = New(func(r *RouterProxy) {
 					r.Root("root", "root node", func(n *NodeProxy) {
-						n.On(CONNECT, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
-						n.On(CONNECT, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
+						n.Method(CONNECT, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
+						n.Method(CONNECT, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
 					})
 					r.OnError(NotFoundError, dumbHandler)
 					r.OnError(MethodNotAllowedError, dumbHandler)
@@ -243,8 +243,8 @@ var _ = Describe("gorr", func() {
 				// only one handler for OPTIONS HTTP method can be specified
 				router, err = New(func(r *RouterProxy) {
 					r.Root("root", "root node", func(n *NodeProxy) {
-						n.On(OPTIONS, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
-						n.On(OPTIONS, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
+						n.Method(OPTIONS, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
+						n.Method(OPTIONS, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
 					})
 					r.OnError(NotFoundError, dumbHandler)
 					r.OnError(MethodNotAllowedError, dumbHandler)
@@ -256,8 +256,8 @@ var _ = Describe("gorr", func() {
 				// only one handler for TRACE HTTP method can be specified
 				router, err = New(func(r *RouterProxy) {
 					r.Root("root", "root node", func(n *NodeProxy) {
-						n.On(TRACE, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
-						n.On(TRACE, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
+						n.Method(TRACE, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
+						n.Method(TRACE, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
 					})
 					r.OnError(NotFoundError, dumbHandler)
 					r.OnError(MethodNotAllowedError, dumbHandler)
@@ -269,8 +269,8 @@ var _ = Describe("gorr", func() {
 				// only one handler for PATCH HTTP method can be specified
 				router, err = New(func(r *RouterProxy) {
 					r.Root("root", "root node", func(n *NodeProxy) {
-						n.On(PATCH, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
-						n.On(PATCH, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
+						n.Method(PATCH, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
+						n.Method(PATCH, func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
 					})
 					r.OnError(NotFoundError, dumbHandler)
 					r.OnError(MethodNotAllowedError, dumbHandler)
