@@ -6,6 +6,10 @@ import (
 )
 
 type (
+	NodeHeader struct {
+		title string
+		match Matcher
+	}
 	Handler func(http.ResponseWriter, *http.Request, map[string]string)
 	Method  struct {
 		title       string
@@ -15,9 +19,8 @@ type (
 	HTTPMethod int
 	Matcher    func(string) bool
 	Node       struct {
-		title       string
+		header      NodeHeader
 		description string
-		match       Matcher
 		methods     [10]*Method
 		children    []*Node
 	}
@@ -59,59 +62,22 @@ var (
 	}
 )
 
-func StringToMethod(s string) (m HTTPMethod) {
-	switch s {
-	case "GET":
-		m = GET
-	case "HEAD":
-		m = HEAD
-	case "POST":
-		m = POST
-	case "PUT":
-		m = PUT
-	case "DELETE":
-		m = DELETE
-	case "CONNECT":
-		m = CONNECT
-	case "OPTIONS":
-		m = OPTIONS
-	case "TRACE":
-		m = TRACE
-	case "PATCH":
-		m = PATCH
-	default:
-		m = WRONG_METHOD
-	}
-	return
-}
-func Matches(expected string) Matcher {
-	return func(v string) bool {
-		return expected == v
-	}
-}
-func MatchesOneOf(samples []string) Matcher {
-	return func(v string) bool {
-		for _, s := range samples {
-			if s == v {
-				return true
-			}
-		}
-		return false
-	}
-}
 func (n *Node) Match(method string, chunks *Chunker) (h *Handler, err error) {
 	ch := chunks.Chunk()
-	if !n.match(ch) {
+	if !n.header.match(ch) {
 		return
 	}
-	err = chunks.Set(n.title, ch)
+	err = chunks.Set(n.header.title, ch)
 	if err != nil {
 		h = nil
 		return
 	}
 	hasNext := chunks.Next()
 	if !hasNext {
-		h = &n.methods[StringToMethod(method)].handler
+		handler := n.methods[StringToMethod(method)].handler
+		if handler != nil {
+			h = &handler
+		}
 		return
 	}
 	for _, ch := range n.children {
@@ -126,14 +92,13 @@ func (n *Node) Match(method string, chunks *Chunker) (h *Handler, err error) {
 	}
 	return
 }
-func (p *NodeProxy) Node(title, description string, match Matcher, conf NodeConfFn) {
+func (p *NodeProxy) Node(h NodeHeader, description string, conf NodeConfFn) {
 	if p.err != nil {
 		return
 	}
 	node := &Node{
-		title:       title,
+		header:      h,
 		description: description,
-		match:       match,
 	}
 	proxy := &NodeProxy{node: node}
 	conf(proxy)

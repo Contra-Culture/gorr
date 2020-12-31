@@ -282,7 +282,7 @@ var _ = Describe("gorr", func() {
 				// child nodes should have at least one method/andler or child
 				router, err = New(func(r *RouterProxy) {
 					r.Root("root", "root node", func(n *NodeProxy) {
-						n.Node("articles", "articles resource", Matches("articles"), func(n *NodeProxy) {})
+						n.Node(Static("articles"), "articles resource", func(n *NodeProxy) {})
 					})
 					r.OnError(NotFoundError, dumbHandler)
 					r.OnError(MethodNotAllowedError, dumbHandler)

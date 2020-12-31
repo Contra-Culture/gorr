@@ -8,21 +8,21 @@ import (
 
 func main() {
 	rr, err := gorr.New(func(r *gorr.RouterProxy) {
+		// r.BeforeMethod(h gorr.Handler)
+		// r.AfterMethod(h gorr.Handler)
+		// NodeHeader-typed node: gorr.Static("node"), gorr.Parameter("article-id", matcher)
+		// doc-gen
 		r.OnError(gorr.NotFoundError, respondWithNotFoundError)
 		r.OnError(gorr.MethodNotAllowedError, respondWithMethodNotAllowed)
 		r.OnError(gorr.InternalServerError, respondWithInternalServerError)
-		// r.BeforeEach()
-		// r.AfterEach()
-		// As()-parameter for url helpers
-		// n.Method()->n.Method()
-		// NodeHeader
-		// Resource
+		r.Before(func(w http.ResponseWriter, r *http.Request) {})
+		r.After(func(w http.ResponseWriter, r *http.Request) {})
 		r.Root("root", "root descr", func(n *gorr.NodeProxy) {
 			n.Method("root", "responds with URL", gorr.GET, respondWithURL)
-			n.Node("articles", "articles resource", gorr.Matches("articles"), func(n *gorr.NodeProxy) {
+			n.Node(gorr.Static("articles"), "articles resource", func(n *gorr.NodeProxy) {
 				n.Method("get-articles", "provides articles", gorr.GET, respondWithArticles)
 				n.Method("create-article", "creates article", gorr.POST, createArticle)
-				n.Node("<article-slug>", "single article resource by slug", func(slug string) bool { return slug == "my-article" }, func(n *gorr.NodeProxy) {
+				n.Node(gorr.Parameter("article-slug", func(slug string) bool { return slug == "my-article" }), "single article resource by slug", func(n *gorr.NodeProxy) {
 					n.Method("get-article", "provides article by its slug", gorr.GET, respondWithArticle)
 				})
 			})

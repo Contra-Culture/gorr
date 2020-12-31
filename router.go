@@ -2,13 +2,14 @@ package gorr
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 )
 
 type (
 	Router struct {
-		root *Node
+		root   *Node
+		before *http.HandlerFunc
+		after  *http.HandlerFunc
 		errorHandlers
 	}
 	errorHandlers    [4]Handler
@@ -33,6 +34,8 @@ const (
 var (
 	rootNodeNotSpecifiedError          = errors.New("root node not specified")
 	rootNodeAlreadySpecifiedError      = errors.New("root node already specified")
+	beforeHookAlreadySpecifiedError    = errors.New("before hook already specified")
+	afterHookAlreadySpecifiedError     = errors.New("after hook already specified")
 	rootMatcher                        = MatchesOneOf([]string{"", "/"})
 	errorHandlerAlreadySpecifiedErrors = [4]error{
 		nil,
@@ -94,6 +97,24 @@ func (r *RouterProxy) OnError(re RouterError, h Handler) {
 	}
 	r.router.errorHandlers[idx] = h
 }
+func (r *RouterProxy) Before(h http.HandlerFunc) {
+	if r.err != nil {
+		return
+	}
+	if r.router.before != nil {
+		r.err = beforeHookAlreadySpecifiedError
+	}
+	r.router.before = &h
+}
+func (r *RouterProxy) After(h http.HandlerFunc) {
+	if r.err != nil {
+		return
+	}
+	if r.router.after != nil {
+		r.err = afterHookAlreadySpecifiedError
+	}
+	r.router.after = &h
+}
 
 // Defines router's root node.
 // Router can have only one root node.
@@ -106,9 +127,11 @@ func (r *RouterProxy) Root(title, description string, conf NodeConfFn) {
 		return
 	}
 	node := &Node{
-		title:       title,
+		header: NodeHeader{
+			title: title,
+			match: rootMatcher,
+		},
 		description: description,
-		match:       rootMatcher,
 	}
 	proxy := &NodeProxy{
 		node: node,
@@ -125,11 +148,12 @@ func (r *RouterProxy) Root(title, description string, conf NodeConfFn) {
 	r.router.root = node
 }
 func (rr *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("\nserves: %s: %s\n\n", r.Method, r.URL.String())
+	(*rr.before)(w, r)
 	chunks := NewChunker(r.URL)
 	handler, err := rr.root.Match(r.Method, chunks)
 	if err != nil {
 		return
 	}
 	(*handler)(w, r, chunks.Params())
+	(*rr.after)(w, r)
 }
