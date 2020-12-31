@@ -7,8 +7,9 @@ import (
 
 type (
 	NodeHeader struct {
-		title string
-		match Matcher
+		isParameter bool
+		title       string
+		match       Matcher
 	}
 	Handler func(http.ResponseWriter, *http.Request, map[string]string)
 	Method  struct {
@@ -67,16 +68,19 @@ func (n *Node) Match(method string, chunks *Chunker) (h *Handler, err error) {
 	if !n.header.match(ch) {
 		return
 	}
-	err = chunks.Set(n.header.title, ch)
-	if err != nil {
-		h = nil
-		return
+	if n.header.isParameter {
+		err = chunks.Set(n.header.title, ch)
+		if err != nil {
+			h = nil
+			return
+		}
 	}
 	hasNext := chunks.Next()
 	if !hasNext {
 		handler := n.methods[StringToMethod(method)].handler
 		if handler != nil {
 			h = &handler
+			return
 		}
 		return
 	}

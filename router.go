@@ -7,9 +7,11 @@ import (
 
 type (
 	Router struct {
-		root   *Node
-		before *http.HandlerFunc
-		after  *http.HandlerFunc
+		root         *Node
+		before       *http.HandlerFunc
+		beforeMethod *Handler
+		afterMethod  *Handler
+		after        *http.HandlerFunc
 		errorHandlers
 	}
 	errorHandlers    [4]Handler
@@ -32,12 +34,14 @@ const (
 )
 
 var (
-	rootNodeNotSpecifiedError          = errors.New("root node not specified")
-	rootNodeAlreadySpecifiedError      = errors.New("root node already specified")
-	beforeHookAlreadySpecifiedError    = errors.New("before hook already specified")
-	afterHookAlreadySpecifiedError     = errors.New("after hook already specified")
-	rootMatcher                        = MatchesOneOf([]string{"", "/"})
-	errorHandlerAlreadySpecifiedErrors = [4]error{
+	rootNodeNotSpecifiedError             = errors.New("root node not specified")
+	rootNodeAlreadySpecifiedError         = errors.New("root node already specified")
+	beforeHookAlreadySpecifiedError       = errors.New("before hook already specified")
+	afterHookAlreadySpecifiedError        = errors.New("after hook already specified")
+	beforeMethodHookAlreadySpecifiedError = errors.New("beforeMethod hook already specified")
+	afterMethodHookAlreadySpecifiedError  = errors.New("afterMethod hook already specified")
+	rootMatcher                           = MatchesOneOf([]string{"", "/"})
+	errorHandlerAlreadySpecifiedErrors    = [4]error{
 		nil,
 		errors.New("`Not Found` handler already specified"),
 		errors.New("`Method Not Allowed` handler already specified"),
@@ -115,6 +119,24 @@ func (r *RouterProxy) After(h http.HandlerFunc) {
 	}
 	r.router.after = &h
 }
+func (r *RouterProxy) BeforeMethod(h Handler) {
+	if r.err != nil {
+		return
+	}
+	if r.router.beforeMethod != nil {
+		r.err = beforeMethodHookAlreadySpecifiedError
+	}
+	r.router.beforeMethod = &h
+}
+func (r *RouterProxy) AfterMethod(h Handler) {
+	if r.err != nil {
+		return
+	}
+	if r.router.afterMethod != nil {
+		r.err = afterMethodHookAlreadySpecifiedError
+	}
+	r.router.afterMethod = &h
+}
 
 // Defines router's root node.
 // Router can have only one root node.
@@ -152,8 +174,11 @@ func (rr *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	chunks := NewChunker(r.URL)
 	handler, err := rr.root.Match(r.Method, chunks)
 	if err != nil {
-		return
+		//	return
 	}
-	(*handler)(w, r, chunks.Params())
+	ps := chunks.Params()
+	(*rr.beforeMethod)(w, r, ps)
+	(*handler)(w, r, ps)
+	(*rr.afterMethod)(w, r, ps)
 	(*rr.after)(w, r)
 }

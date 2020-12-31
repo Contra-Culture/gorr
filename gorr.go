@@ -1,20 +1,21 @@
 package gorr
 
 import (
-	"fmt"
 	"net/http"
 )
 
 func Static(t string) NodeHeader {
 	return NodeHeader{
-		title: t,
-		match: Matches(t),
+		isParameter: false,
+		title:       t,
+		match:       Matches(t),
 	}
 }
 func Parameter(t string, m Matcher) NodeHeader {
 	return NodeHeader{
-		title: fmt.Sprintf("<%s>", t),
-		match: m,
+		isParameter: true,
+		title:       t,
+		match:       m,
 	}
 }
 func Matches(expected string) Matcher {

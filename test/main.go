@@ -8,14 +8,13 @@ import (
 
 func main() {
 	rr, err := gorr.New(func(r *gorr.RouterProxy) {
-		// r.BeforeMethod(h gorr.Handler)
-		// r.AfterMethod(h gorr.Handler)
-		// NodeHeader-typed node: gorr.Static("node"), gorr.Parameter("article-id", matcher)
 		// doc-gen
 		r.OnError(gorr.NotFoundError, respondWithNotFoundError)
 		r.OnError(gorr.MethodNotAllowedError, respondWithMethodNotAllowed)
 		r.OnError(gorr.InternalServerError, respondWithInternalServerError)
 		r.Before(func(w http.ResponseWriter, r *http.Request) {})
+		r.BeforeMethod(func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
+		r.AfterMethod(func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
 		r.After(func(w http.ResponseWriter, r *http.Request) {})
 		r.Root("root", "root descr", func(n *gorr.NodeProxy) {
 			n.Method("root", "responds with URL", gorr.GET, respondWithURL)
