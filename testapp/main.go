@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/Contra-Culture/gorr"
@@ -12,7 +13,7 @@ func main() {
 		r.OnError(gorr.NotFoundError, respondWithNotFoundError)
 		r.OnError(gorr.MethodNotAllowedError, respondWithMethodNotAllowed)
 		r.OnError(gorr.InternalServerError, respondWithInternalServerError)
-		r.Before(func(w http.ResponseWriter, r *http.Request) {})
+		r.Before(func(w http.ResponseWriter, r *http.Request) { fmt.Printf("\n\t-> %s %s", r.Method, r.URL.String()) })
 		r.BeforeMethod(func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
 		r.AfterMethod(func(w http.ResponseWriter, r *http.Request, ps map[string]string) {})
 		r.After(func(w http.ResponseWriter, r *http.Request) {})
@@ -51,13 +52,13 @@ func respondWithNotFoundError(w http.ResponseWriter, r *http.Request, ps map[str
 }
 func respondWithArticles(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Write([]byte(r.URL.String()))
-	w.WriteHeader(http.StatusNotFound)
+	w.WriteHeader(http.StatusFound)
 }
 func respondWithArticle(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Write([]byte(r.URL.String()))
-	w.WriteHeader(http.StatusNotFound)
+	w.WriteHeader(http.StatusFound)
 }
 func createArticle(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Write([]byte(r.URL.String()))
-	w.WriteHeader(http.StatusNotFound)
+	w.WriteHeader(http.StatusCreated)
 }

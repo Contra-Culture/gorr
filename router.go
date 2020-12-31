@@ -176,6 +176,9 @@ func (rr *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		//	return
 	}
+	if handler == nil {
+		handler = &rr.errorHandlers[int(NotFoundError)]
+	}
 	ps := chunks.Params()
 	(*rr.beforeMethod)(w, r, ps)
 	(*handler)(w, r, ps)
