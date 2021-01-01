@@ -24,6 +24,8 @@ func NewChunker(url *url.URL) *Chunker {
 	chunks := strings.Split(url.String(), "/")
 	if len(chunks) == 2 && chunks[0] == "" && chunks[0] == chunks[1] {
 		chunks = []string{""}
+	} else if chunks[len(chunks)-1] == "" {
+		chunks = chunks[:len(chunks)-1]
 	}
 	ps := map[string]string{}
 	ps["$url"] = url.String()

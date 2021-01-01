@@ -20,7 +20,7 @@ func main() {
 		r.Root("root", "root descr", func(n *gorr.NodeProxy) {
 			n.Method("root", "responds with URL", gorr.GET, respondWithURL)
 			n.Node(gorr.Static("articles"), "articles resource", func(n *gorr.NodeProxy) {
-				n.Method("get-articles", "provides articles", gorr.GET, respondWithArticles)
+				n.Method("get-articles", "provides articles", gorr.GET, respondWithURL)
 				n.Method("create-article", "creates article", gorr.POST, createArticle)
 				n.Node(gorr.Parameter("article-slug", func(slug string) bool { return slug == "my-article" }), "single article resource by slug", func(n *gorr.NodeProxy) {
 					n.Method("get-article", "provides article by its slug", gorr.GET, respondWithArticle)
@@ -40,8 +40,7 @@ func main() {
 }
 
 func respondWithURL(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	var respbs = []byte(fmt.Sprintf("{\"a\":\"%s\",\"m\":\"%s\",\"p\":\"%#v\"}", r.Method, r.URL.String(), ps))
-	w.Write(respbs)
+	w.Write([]byte(fmt.Sprintf("%s", ps)))
 	w.WriteHeader(http.StatusOK)
 }
 func respondWithInternalServerError(w http.ResponseWriter, r *http.Request, ps map[string]string) {
