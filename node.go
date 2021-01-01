@@ -2,7 +2,9 @@ package gorr
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 )
 
 type (
@@ -104,6 +106,7 @@ func (p *NodeProxy) Node(h NodeHeader, description string, conf NodeConfFn) {
 	node := &Node{
 		header:      h,
 		description: description,
+		children:    []*Node{},
 	}
 	proxy := &NodeProxy{node: node}
 	conf(proxy)
@@ -142,4 +145,21 @@ func (n *Node) isEmpty() bool {
 		}
 	}
 	return true
+}
+func (n *Node) toJSON() string {
+	var sb = &strings.Builder{}
+	sb.WriteRune('{')
+	sb.WriteString(fmt.Sprintf("\"title\":\"%s\",", n.header.title))
+	sb.WriteString(fmt.Sprintf("\"isParameter\":\"%v\",", n.header.isParameter))
+	sb.WriteString(fmt.Sprintf("\"description\":\"%s\",", n.description))
+	sb.WriteString("\"children\":[")
+	skipCommaAfter := len(n.children) - 1
+	for i, ch := range n.children {
+		sb.WriteString(ch.toJSON())
+		if i < skipCommaAfter {
+			sb.WriteRune(',')
+		}
+	}
+	sb.WriteString("]}")
+	return sb.String()
 }

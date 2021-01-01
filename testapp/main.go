@@ -9,7 +9,6 @@ import (
 
 func main() {
 	rr, err := gorr.New(func(r *gorr.RouterProxy) {
-		// doc-gen
 		r.OnError(gorr.NotFoundError, respondWithNotFoundError)
 		r.OnError(gorr.MethodNotAllowedError, respondWithMethodNotAllowed)
 		r.OnError(gorr.InternalServerError, respondWithInternalServerError)
@@ -17,7 +16,8 @@ func main() {
 		r.BeforeMethod(func(w http.ResponseWriter, r *http.Request, ps map[string]string) { w.Write([]byte("beforehook\n")) })
 		r.AfterMethod(func(w http.ResponseWriter, r *http.Request, ps map[string]string) { fmt.Print("\nafterhook\n") })
 		r.After(func(w http.ResponseWriter, r *http.Request) {})
-		r.Root("root", "root descr", func(n *gorr.NodeProxy) {
+		r.ShowRoutes("routes", func() bool { return true })
+		r.Root("welcome", "welcome page", func(n *gorr.NodeProxy) {
 			n.Method("root", "responds with URL", gorr.GET, respondWithURL)
 			n.Node(gorr.Static("articles"), "articles resource", func(n *gorr.NodeProxy) {
 				n.Method("get-articles", "provides articles", gorr.GET, respondWithURL)
@@ -33,7 +33,6 @@ func main() {
 		})
 	})
 	if err != nil {
-		fmt.Printf("\n\nerror: %s\n\n", err.Error())
 		panic(err)
 	}
 	http.ListenAndServe(":8080", rr)
@@ -56,13 +55,11 @@ func respondWithNotFoundError(w http.ResponseWriter, r *http.Request, ps map[str
 	w.WriteHeader(http.StatusNotFound)
 }
 func respondWithArticles(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	var respbs = []byte(fmt.Sprintf("{\"a\":\"%s\",\"m\":\"%s\",\"p\":\"%#v\"}", r.Method, r.URL.String(), ps))
-	w.Write(respbs)
+	w.Write([]byte(fmt.Sprintf("%s", ps)))
 	w.WriteHeader(http.StatusOK)
 }
 func respondWithArticle(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	var respbs = []byte(fmt.Sprintf("{\"a\":\"%s\",\"m\":\"%s\",\"p\":\"%#v\"}", r.Method, r.URL.String(), ps))
-	w.Write(respbs)
+	w.Write([]byte(fmt.Sprintf("%s", ps)))
 	w.WriteHeader(http.StatusFound)
 }
 func createArticle(w http.ResponseWriter, r *http.Request, ps map[string]string) {

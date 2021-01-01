@@ -3,10 +3,12 @@ package gorr
 import (
 	"errors"
 	"net/http"
+	"strings"
 )
 
 type (
 	Router struct {
+		isRootSet    bool
 		root         *Node
 		before       *http.HandlerFunc
 		beforeMethod *Handler
@@ -56,35 +58,47 @@ var (
 )
 
 // Returns new router.
-func New(conf RouterConfFn) (r *Router, err error) {
-	r = &Router{errorHandlers: errorHandlers{}}
-	proxy := &RouterProxy{router: r}
+func New(conf RouterConfFn) (rr *Router, err error) {
+	root := &Node{
+		header: NodeHeader{
+			title: "/",
+			match: rootMatcher,
+		},
+		description: "root node",
+		children:    []*Node{},
+	}
+	rr = &Router{
+		isRootSet:     false,
+		root:          root,
+		errorHandlers: errorHandlers{},
+	}
+	proxy := &RouterProxy{router: rr}
 	conf(proxy)
 	err = proxy.err
 	if err != nil {
-		r = nil
+		rr = nil
 		return
 	}
-	if r.root == nil {
-		r = nil
+	if !rr.isRootSet {
+		rr = nil
 		err = rootNodeNotSpecifiedError
 		return
 	}
 	idx := int(NotFoundError)
-	if r.errorHandlers[idx] == nil {
-		r = nil
+	if rr.errorHandlers[idx] == nil {
+		rr = nil
 		err = errorHandlerNotSpecifiedErrors[idx]
 		return
 	}
 	idx = int(MethodNotAllowedError)
-	if r.errorHandlers[idx] == nil {
-		r = nil
+	if rr.errorHandlers[idx] == nil {
+		rr = nil
 		err = errorHandlerNotSpecifiedErrors[idx]
 		return
 	}
 	idx = int(InternalServerError)
-	if r.errorHandlers[idx] == nil {
-		r = nil
+	if rr.errorHandlers[idx] == nil {
+		rr = nil
 		err = errorHandlerNotSpecifiedErrors[idx]
 		return
 	}
@@ -144,17 +158,13 @@ func (r *RouterProxy) Root(title, description string, conf NodeConfFn) {
 	if r.err != nil {
 		return
 	}
-	if r.router.root != nil {
+	if r.router.isRootSet {
 		r.err = rootNodeAlreadySpecifiedError
 		return
 	}
-	node := &Node{
-		header: NodeHeader{
-			title: title,
-			match: rootMatcher,
-		},
-		description: description,
-	}
+	node := r.router.root
+	node.header.title = title
+	node.description = description
 	proxy := &NodeProxy{
 		node: node,
 	}
@@ -167,7 +177,28 @@ func (r *RouterProxy) Root(title, description string, conf NodeConfFn) {
 		r.err = obsoleteNodeError
 		return
 	}
-	r.router.root = node
+	r.router.isRootSet = true
+}
+func (r *RouterProxy) ShowRoutes(t string, cond func() bool) {
+	if r.err != nil {
+		return
+	}
+	n := &NodeProxy{node: r.router.root}
+	n.Node(StaticConditional(t, cond), "routing documentation", func(n *NodeProxy) {
+		n.Method("get-routes", "provides app's routing information", GET, func(w http.ResponseWriter, _ *http.Request, _ map[string]string) {
+			w.Write([]byte(r.router.toJSON()))
+			w.WriteHeader(http.StatusOK)
+		})
+	})
+	r.err = n.err
+}
+
+func (r *Router) toJSON() string {
+	var sb = &strings.Builder{}
+	sb.WriteByte('{')
+	sb.WriteString(r.root.toJSON())
+	sb.WriteByte('}')
+	return sb.String()
 }
 func (rr *Router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	(*rr.before)(w, r)

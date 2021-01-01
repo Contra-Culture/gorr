@@ -11,6 +11,13 @@ func Static(t string) NodeHeader {
 		match:       Matches(t),
 	}
 }
+func StaticConditional(t string, cond func() bool) NodeHeader {
+	return NodeHeader{
+		isParameter: false,
+		title:       t,
+		match:       func(v string) bool { return cond() && v == t },
+	}
+}
 func Parameter(t string, m Matcher) NodeHeader {
 	return NodeHeader{
 		isParameter: true,
