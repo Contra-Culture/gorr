@@ -8,6 +8,7 @@ import (
 
 type (
 	Chunker struct {
+		url    *url.URL
 		chunks []string
 		params map[string]string
 		idx    int
@@ -19,14 +20,18 @@ var (
 	paramAlreadySetError = errors.New("param already set")
 )
 
-func NewChunker(u *url.URL) *Chunker {
-	chunks := strings.Split(u.String(), "/")
+func NewChunker(url *url.URL) *Chunker {
+	chunks := strings.Split(url.String(), "/")
 	if len(chunks) == 2 && chunks[0] == "" && chunks[0] == chunks[1] {
 		chunks = []string{""}
 	}
+	ps := map[string]string{}
+	ps["$url"] = url.String()
+	ps["$path"] = url.Path
 	return &Chunker{
+		url:    url,
 		chunks: chunks,
-		params: map[string]string{},
+		params: ps,
 		idx:    0,
 	}
 }
