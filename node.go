@@ -77,9 +77,10 @@ func (n *Node) Match(method string, chunks *Chunker) (h *Handler, err error) {
 	}
 	hasNext := chunks.Next()
 	if !hasNext {
-		handler := n.methods[StringToMethod(method)].handler
-		if handler != nil {
-			h = &handler
+		m := n.methods[StringToMethod(method)]
+		if m != nil {
+			chunks.Set("$method", m.title)
+			h = &m.handler
 			return
 		}
 		return

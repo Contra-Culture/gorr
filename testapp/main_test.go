@@ -2,30 +2,23 @@ package main_test
 
 import (
 	"net/http"
-	"os/exec"
+	"os"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gexec"
 )
 
 var _ = Describe("web app", func() {
 	var (
-		path    string
-		command *exec.Cmd
-		session *gexec.Session
-		err     error
+		p   *os.Process
+		err error
 	)
 	BeforeSuite(func() {
-		path, err = gexec.BuildWithEnvironment("./main.go", []string{})
-		Expect(err).NotTo(HaveOccurred())
-		command = exec.Command(path)
-		session, err = gexec.Start(command, GinkgoWriter, GinkgoWriter)
+		p, err = os.StartProcess("go", []string{"run ./main.go"}, &os.ProcAttr{})
 		Expect(err).NotTo(HaveOccurred())
 	})
 	AfterSuite(func() {
-		session.Interrupt()
-		gexec.CleanupBuildArtifacts()
+		p.Kill()
 	})
 	It("runs successfully", func() {
 		resp, err := http.Get("http://localhost:8080/articles/")
