@@ -16,7 +16,7 @@ type (
 
 func (c *NodeCfgr) Wildcard(t, d string, cfg func(*NodeCfgr)) {
 	if c.node.wildcard != nil {
-		c.report.Error(fmt.Sprintf("* node already specified", t))
+		c.report.Error("* node already specified")
 	}
 	rctx := c.report.Context(fmt.Sprintf("*%s", t))
 	n := new(t, d, rctx, cfg)

@@ -1,6 +1,7 @@
 package gorr
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/Contra-Culture/gorr/node"
@@ -18,13 +19,14 @@ type (
 	}
 )
 
-func (c *DispatcherCfgr) Root(t, d string, cfg func(*node.NodeCfgr)) {
+func (c *DispatcherCfgr) Root(d string, cfg func(*node.NodeCfgr)) {
 	if c.dispatcher.root != nil {
 		c.report.Error("root node already specified")
 		return
 	}
-	root, report := node.New(t, d, cfg)
+	root, report := node.New("/", d, cfg)
 	c.dispatcher.root = root
+	fmt.Printf("\n\nroot node specified c.dispatcher.root %#v\n\n", c.dispatcher.root)
 	c.report = report
 }
 func New(cfg func(*DispatcherCfgr)) (d *Dispatcher, r *report.RContext) {
@@ -38,16 +40,32 @@ func New(cfg func(*DispatcherCfgr)) (d *Dispatcher, r *report.RContext) {
 	return
 }
 func (d *Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	n := d.root
+	fmt.Printf("\n\nServeHTTP dispatcher %#v\n\n", d)
+	var current *node.Node
+	var ok bool
+
 	params, err := url.Handle(
 		r.URL.Path,
 		func(f string, fn func(string)) {
-			n = n.Child(f)
+			if current != nil {
+				current = d.root
+				fmt.Printf("\n\nServeHTTP iteration over path inner (%s) -> node %#v\n\n", r.URL.Path, current)
+				return
+			}
+			fmt.Printf("\n\nServeHTTP iteration over path (%s) -> node %#v\n\n", r.URL.Path, current)
+			current, ok = current.Child(f)
+			if !ok {
+				w.Write([]byte("not found"))
+				w.WriteHeader(404)
+				return
+			}
 		})
 	if err != nil {
-		return // TODO:
+		w.Write([]byte("not-found 2"))
+		w.WriteHeader(404)
+		return
 	}
-	m := n.Handler(node.HTTPMethod(r.Method))
+	m := current.Handler(node.HTTPMethod(r.Method))
 	handle := m.Handler()
 	handle(w, r, params)
 }

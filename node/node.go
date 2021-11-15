@@ -1,6 +1,7 @@
 package node
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/Contra-Culture/report"
@@ -37,7 +38,7 @@ const (
 )
 
 func New(t, d string, cfg func(*NodeCfgr)) (n *Node, r *report.RContext) {
-	r = report.New("routing tree")
+	r = report.New(t)
 	n = new(t, d, r, cfg)
 	return
 }
@@ -46,6 +47,8 @@ func new(t, d string, rctx *report.RContext, cfg func(*NodeCfgr)) (n *Node) {
 		title:       t,
 		description: d,
 		matcher:     t,
+		methods:     map[HTTPMethod]*Method{},
+		static:      map[string]*Node{},
 	}
 	cfg(
 		&NodeCfgr{
@@ -57,12 +60,18 @@ func new(t, d string, rctx *report.RContext, cfg func(*NodeCfgr)) (n *Node) {
 func (n *Node) Handler(m HTTPMethod) *Method {
 	return n.methods[m]
 }
-func (n *Node) Child(f string) *Node {
-	child, ok := n.static[f]
+func (n *Node) Child(f string) (child *Node, ok bool) {
+	fmt.Printf("\n\nnode.Child() parent node: %#v\n\n", n)
+	child, ok = n.static[f]
 	if ok {
-		return child
+		return
 	}
-	return nil
+	child = n.param
+	if child != nil {
+		return
+	}
+	child = n.wildcard
+	return child, n.wildcard != nil
 }
 func (m *Method) Title() string {
 	return m.title

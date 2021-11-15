@@ -23,7 +23,6 @@ var _ = Describe("gorr", func() {
 				d, r = New(
 					func(cfg *DispatcherCfgr) {
 						cfg.Root(
-							"root-test",
 							"Test root.",
 							func(cfg *node.NodeCfgr) {
 							})
