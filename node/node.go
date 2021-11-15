@@ -8,9 +8,8 @@ import (
 
 type (
 	Node struct {
-		isParameter bool
-		title       string
 		matcher     interface{} // interface{} is string, []string or func(string) bool
+		title       string
 		description string
 		methods     map[HTTPMethod]*Method
 		static      map[string]*Node
@@ -38,35 +37,25 @@ const (
 )
 
 func New(t, d string, cfg func(*NodeCfgr)) (n *Node, r *report.RContext) {
+	r = report.New("routing tree")
+	n = new(t, d, r, cfg)
+	return
+}
+func new(t, d string, rctx *report.RContext, cfg func(*NodeCfgr)) (n *Node) {
 	n = &Node{
-		isParameter: false,
 		title:       t,
 		description: d,
 		matcher:     t,
 	}
-	r = report.New("routing tree")
 	cfg(
 		&NodeCfgr{
-			report: r,
+			report: rctx,
 			node:   n,
 		})
 	return
 }
-func (n *Node) Handler(m HTTPMethod) func(http.ResponseWriter, *http.Request, map[string]string) {
-	method := n.methods[m]
-	if method != nil {
-		return method.handler
-	}
-	return n.methodNotAllowedErrorHandler()
-}
-func (n *Node) methodNotAllowedErrorHandler() func(http.ResponseWriter, *http.Request, map[string]string) {
-	return nil
-}
-func (n *Node) notFoundErrorHandler() func(http.ResponseWriter, *http.Request, map[string]string) {
-	return nil
-}
-func (n *Node) internalServerErrorHandler() func(http.ResponseWriter, *http.Request, map[string]string) {
-	return nil
+func (n *Node) Handler(m HTTPMethod) *Method {
+	return n.methods[m]
 }
 func (n *Node) Child(f string) *Node {
 	child, ok := n.static[f]
@@ -74,4 +63,13 @@ func (n *Node) Child(f string) *Node {
 		return child
 	}
 	return nil
+}
+func (m *Method) Title() string {
+	return m.title
+}
+func (m *Method) Decription() string {
+	return m.description
+}
+func (m *Method) Handler() func(http.ResponseWriter, *http.Request, map[string]string) {
+	return m.handler
 }
