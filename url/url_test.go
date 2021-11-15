@@ -13,15 +13,25 @@ var _ = Describe("url", func() {
 	Describe("Handle", func() {
 		Context("when there is no conflict in params", func() {
 			It("succeed and returns params map", func() {
+				counter := 0
+				params, err := Handle(
+					"/",
+					func(fragment string, mark func(string)) {
+						counter++
+					})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(counter).To(Equal(0))
+				Expect(params).To(Equal(map[string]string{
+					"$path": "/",
+				}))
 				paramsOrder := []string{
-					"",
 					"orgName",
 					"projectName",
 					"",
 					"commit",
 				}
 				idx := 0
-				params, err := Handle(
+				params, err = Handle(
 					u.Path,
 					func(fragment string, mark func(string)) {
 						if len(paramsOrder[idx]) > 0 {
@@ -29,6 +39,7 @@ var _ = Describe("url", func() {
 						}
 						idx++
 					})
+				Expect(idx).To(Equal(4))
 				Expect(err).NotTo(HaveOccurred())
 				Expect(params).To(
 					Equal(map[string]string{
@@ -42,7 +53,6 @@ var _ = Describe("url", func() {
 		Context("when there is a conflict in params", func() {
 			It("fails and returns error", func() {
 				paramsOrder := []string{
-					"",
 					"orgName",
 					"orgName",
 					"",

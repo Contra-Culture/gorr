@@ -49,10 +49,10 @@ func (d *Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		func(f string, fn func(string)) {
 			if current != nil {
 				current = d.root
-				fmt.Printf("\n\nServeHTTP iteration over path inner (%s) -> node %#v\n\n", r.URL.Path, current)
+				fmt.Printf("\n\nServeHTTP iteration over path inner (%s) `%s` -> node %#v\n\n", r.URL.Path, f, current)
 				return
 			}
-			fmt.Printf("\n\nServeHTTP iteration over path (%s) -> node %#v\n\n", r.URL.Path, current)
+			fmt.Printf("\n\nServeHTTP iteration over path (%s) `%s` -> node %#v\n\n", r.URL.Path, f, current)
 			current, ok = current.Child(f)
 			if !ok {
 				w.Write([]byte("not found"))
@@ -65,6 +65,7 @@ func (d *Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(404)
 		return
 	}
+	fmt.Printf("\n\nServeHTTP iteration over path (%s) end node %#v\n\n", r.URL.Path, current)
 	m := current.Handler(node.HTTPMethod(r.Method))
 	handle := m.Handler()
 	handle(w, r, params)

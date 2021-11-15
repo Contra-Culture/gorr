@@ -9,7 +9,12 @@ func Handle(path string, iterBlck func(string, func(string))) (params map[string
 	params = map[string]string{
 		"$path": path,
 	}
-	fragments := strings.Split(path, "/")
+	fragments := []string{}
+	for _, f := range strings.Split(path, "/") {
+		if len(f) > 0 {
+			fragments = append(fragments, f)
+		}
+	}
 	for _, fragment := range fragments {
 		if err != nil {
 			params = nil

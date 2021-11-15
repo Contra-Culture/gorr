@@ -58,6 +58,8 @@ func new(t, d string, rctx *report.RContext, cfg func(*NodeCfgr)) (n *Node) {
 	return
 }
 func (n *Node) Handler(m HTTPMethod) *Method {
+	fmt.Printf("\n\n*Node.Handler() %s\n\n", string(m))
+
 	return n.methods[m]
 }
 func (n *Node) Child(f string) (child *Node, ok bool) {
