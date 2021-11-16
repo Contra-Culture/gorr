@@ -74,10 +74,5 @@ func (d *Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		parent = current
 	}
-	if err != nil {
-		w.Write([]byte("not found 2"))
-		w.WriteHeader(404)
-		return
-	}
 	current.Handle(w, r, params)
 }
