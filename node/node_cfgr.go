@@ -41,6 +41,27 @@ func (c *NodeCfgr) Param(t, d string, cfg func(*NodeCfgr)) {
 	n := new(c.node, t, d, true, rctx, cfg)
 	c.node.param = n
 }
+func (c *NodeCfgr) HandleNotFoundErrorWith(h Handler) {
+	if c.node.__notFoundErrorHandler != nil {
+		c.report.Error("not found error handler already specified")
+		return
+	}
+	c.node.__notFoundErrorHandler = h
+}
+func (c *NodeCfgr) HandleInternalServerErrorWith(h Handler) {
+	if c.node.__internalServerErrorHandler != nil {
+		c.report.Error("internal server error handler already specified")
+		return
+	}
+	c.node.__internalServerErrorHandler = h
+}
+func (c *NodeCfgr) HandleMethodNotAllowedErrorWith(h Handler) {
+	if c.node.__methodNotAllowedErrorHandler != nil {
+		c.report.Error("method not allowed error handler already specified")
+		return
+	}
+	c.node.__methodNotAllowedErrorHandler = h
+}
 func (c *NodeCfgr) GET(t, d string, h Handler) {
 	_, exists := c.node.methods[GET]
 	if exists {

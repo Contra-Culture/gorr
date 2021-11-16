@@ -13,30 +13,48 @@ func main() {
 		func(cfg *gorr.DispatcherCfgr) {
 			cfg.Root(
 				"Test root.",
-				func(cfg *node.NodeCfgr) {
-					cfg.GET(
+				func(root *node.NodeCfgr) {
+					root.HandleInternalServerErrorWith(
+						func(w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
+							w.Write([]byte("not found"))
+							w.WriteHeader(404)
+							return
+						})
+					root.HandleMethodNotAllowedErrorWith(
+						func(w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
+							w.Write([]byte("method not allowed"))
+							w.WriteHeader(404)
+							return
+						})
+					root.HandleInternalServerErrorWith(
+						func(w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
+							w.Write([]byte("internal server error"))
+							w.WriteHeader(404)
+							return
+						})
+					root.GET(
 						"welcome",
 						"latest content",
 						func(w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
 							w.Write([]byte("welcome"))
 							return
 						})
-					cfg.Static(
+					root.Static(
 						"articles",
 						"articles resource.",
-						func(cfg *node.NodeCfgr) {
-							cfg.GET(
+						func(articles *node.NodeCfgr) {
+							articles.GET(
 								"all-articles",
 								"list of all articles, ordered by publication date",
 								func(w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
 									w.Write([]byte("all-articles"))
 									return
 								})
-							cfg.Param(
+							articles.Param(
 								"articleID",
 								"single article resource",
-								func(cfg *node.NodeCfgr) {
-									cfg.GET(
+								func(article *node.NodeCfgr) {
+									article.GET(
 										"article",
 										"single article full presentation",
 										func(w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {

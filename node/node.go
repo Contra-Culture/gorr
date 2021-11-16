@@ -91,9 +91,10 @@ func (n *Node) handleMethodNotAllowedError(w http.ResponseWriter, r *http.Reques
 			return
 		}
 		n = n.parent
-		if n == nil {
-			return errors.New("method not allowed handler is not provided")
+		if n != nil {
+			continue
 		}
+		return errors.New("method not allowed handler is not provided")
 	}
 }
 func (n *Node) HandleNotFoundError(w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
@@ -105,9 +106,10 @@ func (n *Node) HandleNotFoundError(w http.ResponseWriter, r *http.Request, param
 			return
 		}
 		n = n.parent
-		if n == nil {
-			return errors.New("not found handler is not provided")
+		if n != nil {
+			continue
 		}
+		return errors.New("not found handler is not provided")
 	}
 }
 func (n *Node) handleInternalServerError(w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
@@ -119,9 +121,10 @@ func (n *Node) handleInternalServerError(w http.ResponseWriter, r *http.Request,
 			return
 		}
 		n = n.parent
-		if n == nil {
-			return errors.New("internal server error handler is not provided")
+		if n != nil {
+			continue
 		}
+		return errors.New("internal server error handler is not provided")
 	}
 }
 func (n *Node) Child(f string) (child *Node, ok bool) {
