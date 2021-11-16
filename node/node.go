@@ -12,7 +12,6 @@ type (
 	Node    struct {
 		parent                         *Node
 		isParam                        bool
-		matcher                        interface{} // interface{} is string, []string or func(string) bool
 		title                          string
 		description                    string
 		methods                        map[HTTPMethod]*Method
@@ -54,7 +53,6 @@ func new(p *Node, t, d string, isProp bool, rctx *report.RContext, cfg func(*Nod
 		isParam:     isProp,
 		title:       t,
 		description: d,
-		matcher:     t,
 		methods:     map[HTTPMethod]*Method{},
 		static:      map[string]*Node{},
 	}
