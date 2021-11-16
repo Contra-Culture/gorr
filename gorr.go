@@ -26,7 +26,6 @@ func (c *DispatcherCfgr) Root(d string, cfg func(*node.NodeCfgr)) {
 	}
 	root, report := node.New("/", d, cfg)
 	c.dispatcher.root = root
-	fmt.Printf("\n\nroot node specified c.dispatcher.root %#v\n\n", c.dispatcher.root)
 	c.report = report
 }
 func New(cfg func(*DispatcherCfgr)) (d *Dispatcher, r *report.RContext) {
@@ -40,33 +39,27 @@ func New(cfg func(*DispatcherCfgr)) (d *Dispatcher, r *report.RContext) {
 	return
 }
 func (d *Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("\n\nServeHTTP dispatcher %#v, %s\n\n", d, r.URL.String())
 	var current = d.root
 	var ok bool
 	params, err := handle(
 		r.URL.Path,
 		func(f string, fn func(string)) {
-			if current != nil {
-				fmt.Printf("\n\nServeHTTP iteration over path (%s) `%s` -> node %#v\n\n", r.URL.Path, f, current)
-				current, ok = current.Child(f)
-				if !ok {
-					w.Write([]byte("not found"))
-					w.WriteHeader(404)
-					return
-				}
-				pname, ok := current.Param()
-				if ok {
-					fn(pname)
-				}
+			current, ok = current.Child(f)
+			if !ok {
+				w.Write([]byte("not found 1"))
+				w.WriteHeader(404)
 				return
+			}
+			pname, ok := current.Param()
+			if ok {
+				fn(pname)
 			}
 		})
 	if err != nil {
-		w.Write([]byte("not-found 2"))
+		w.Write([]byte("not found 2"))
 		w.WriteHeader(404)
 		return
 	}
-	fmt.Printf("\n\nServeHTTP iteration over path (%s) end node %#v\n\n", r.URL.Path, current)
 	m := current.Handler(node.HTTPMethod(r.Method))
 	handle := m.Handler()
 	handle(w, r, params)

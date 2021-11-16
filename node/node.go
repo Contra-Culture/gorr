@@ -1,7 +1,6 @@
 package node
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/Contra-Culture/report"
@@ -67,21 +66,20 @@ func (n *Node) Param() (name string, ok bool) {
 	return
 }
 func (n *Node) Handler(m HTTPMethod) *Method {
-	fmt.Printf("\n\n*Node.Handler() %#v : %s\n\n", n, string(m))
 	return n.methods[m]
 }
 func (n *Node) Child(f string) (child *Node, ok bool) {
-	fmt.Printf("\n\nnode.Child() parent node: %#v\n\n", n)
 	child, ok = n.static[f]
 	if ok {
 		return
 	}
 	child = n.param
-	if child != nil {
+	ok = child != nil
+	if ok {
 		return
 	}
 	child = n.wildcard
-	return child, n.wildcard != nil
+	return child, child != nil
 }
 func (m *Method) Title() string {
 	return m.title
