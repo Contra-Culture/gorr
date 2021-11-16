@@ -9,6 +9,7 @@ import (
 
 type (
 	Node struct {
+		isParam     bool
 		matcher     interface{} // interface{} is string, []string or func(string) bool
 		title       string
 		description string
@@ -39,11 +40,12 @@ const (
 
 func New(t, d string, cfg func(*NodeCfgr)) (n *Node, r *report.RContext) {
 	r = report.New(t)
-	n = new(t, d, r, cfg)
+	n = new(t, d, false, r, cfg)
 	return
 }
-func new(t, d string, rctx *report.RContext, cfg func(*NodeCfgr)) (n *Node) {
+func new(t, d string, p bool, rctx *report.RContext, cfg func(*NodeCfgr)) (n *Node) {
 	n = &Node{
+		isParam:     p,
 		title:       t,
 		description: d,
 		matcher:     t,
@@ -57,9 +59,15 @@ func new(t, d string, rctx *report.RContext, cfg func(*NodeCfgr)) (n *Node) {
 		})
 	return
 }
+func (n *Node) Param() (name string, ok bool) {
+	ok = n.isParam
+	if ok {
+		name = n.title
+	}
+	return
+}
 func (n *Node) Handler(m HTTPMethod) *Method {
-	fmt.Printf("\n\n*Node.Handler() %s\n\n", string(m))
-
+	fmt.Printf("\n\n*Node.Handler() %#v : %s\n\n", n, string(m))
 	return n.methods[m]
 }
 func (n *Node) Child(f string) (child *Node, ok bool) {

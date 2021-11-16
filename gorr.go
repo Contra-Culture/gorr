@@ -40,23 +40,24 @@ func New(cfg func(*DispatcherCfgr)) (d *Dispatcher, r *report.RContext) {
 	return
 }
 func (d *Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("\n\nServeHTTP dispatcher %#v\n\n", d)
-	var current *node.Node
+	fmt.Printf("\n\nServeHTTP dispatcher %#v, %s\n\n", d, r.URL.String())
+	var current = d.root
 	var ok bool
-
 	params, err := url.Handle(
 		r.URL.Path,
 		func(f string, fn func(string)) {
 			if current != nil {
-				current = d.root
-				fmt.Printf("\n\nServeHTTP iteration over path inner (%s) `%s` -> node %#v\n\n", r.URL.Path, f, current)
-				return
-			}
-			fmt.Printf("\n\nServeHTTP iteration over path (%s) `%s` -> node %#v\n\n", r.URL.Path, f, current)
-			current, ok = current.Child(f)
-			if !ok {
-				w.Write([]byte("not found"))
-				w.WriteHeader(404)
+				fmt.Printf("\n\nServeHTTP iteration over path (%s) `%s` -> node %#v\n\n", r.URL.Path, f, current)
+				current, ok = current.Child(f)
+				if !ok {
+					w.Write([]byte("not found"))
+					w.WriteHeader(404)
+					return
+				}
+				pname, ok := current.Param()
+				if ok {
+					fn(pname)
+				}
 				return
 			}
 		})

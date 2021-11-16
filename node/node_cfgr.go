@@ -17,26 +17,29 @@ type (
 func (c *NodeCfgr) Wildcard(t, d string, cfg func(*NodeCfgr)) {
 	if c.node.wildcard != nil {
 		c.report.Error("* node already specified")
+		return
 	}
 	rctx := c.report.Context(fmt.Sprintf("*%s", t))
-	n := new(t, d, rctx, cfg)
+	n := new(t, d, false, rctx, cfg)
 	c.node.wildcard = n
 }
 func (c *NodeCfgr) Static(t, d string, cfg func(*NodeCfgr)) {
 	_, exists := c.node.static[t]
 	if exists {
 		c.report.Error(fmt.Sprintf("static \"%s\" node already specified", t))
+		return
 	}
 	rctx := c.report.Context(fmt.Sprintf("%%%s", t))
-	n := new(t, d, rctx, cfg)
+	n := new(t, d, false, rctx, cfg)
 	c.node.static[t] = n
 }
 func (c *NodeCfgr) Param(t, d string, cfg func(*NodeCfgr)) {
 	if c.node.param != nil {
 		c.report.Error(fmt.Sprintf("param \":%s\" node already specified", t))
+		return
 	}
 	rctx := c.report.Context(fmt.Sprintf(":%s", t))
-	n := new(t, d, rctx, cfg)
+	n := new(t, d, true, rctx, cfg)
 	c.node.param = n
 }
 func (c *NodeCfgr) GET(t, d string, h func(http.ResponseWriter, *http.Request, map[string]string)) {

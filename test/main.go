@@ -30,6 +30,18 @@ func main() {
 								func(w http.ResponseWriter, r *http.Request, params map[string]string) {
 									w.Write([]byte("all-articles"))
 								})
+							cfg.Param(
+								"articleID",
+								"single article resource",
+								func(cfg *node.NodeCfgr) {
+									cfg.GET(
+										"article",
+										"single article full presentation",
+										func(w http.ResponseWriter, r *http.Request, params map[string]string) {
+											w.Write([]byte(fmt.Sprintf("article: %s %#v", params["articleID"], params)))
+											w.WriteHeader(200)
+										})
+								})
 						})
 				})
 		})
