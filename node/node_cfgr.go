@@ -2,7 +2,6 @@ package node
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/Contra-Culture/report"
 )
@@ -20,7 +19,7 @@ func (c *NodeCfgr) Wildcard(t, d string, cfg func(*NodeCfgr)) {
 		return
 	}
 	rctx := c.report.Context(fmt.Sprintf("*%s", t))
-	n := new(t, d, false, rctx, cfg)
+	n := new(c.node, t, d, false, rctx, cfg)
 	c.node.wildcard = n
 }
 func (c *NodeCfgr) Static(t, d string, cfg func(*NodeCfgr)) {
@@ -30,7 +29,7 @@ func (c *NodeCfgr) Static(t, d string, cfg func(*NodeCfgr)) {
 		return
 	}
 	rctx := c.report.Context(fmt.Sprintf("%%%s", t))
-	n := new(t, d, false, rctx, cfg)
+	n := new(c.node, t, d, false, rctx, cfg)
 	c.node.static[t] = n
 }
 func (c *NodeCfgr) Param(t, d string, cfg func(*NodeCfgr)) {
@@ -39,10 +38,10 @@ func (c *NodeCfgr) Param(t, d string, cfg func(*NodeCfgr)) {
 		return
 	}
 	rctx := c.report.Context(fmt.Sprintf(":%s", t))
-	n := new(t, d, true, rctx, cfg)
+	n := new(c.node, t, d, true, rctx, cfg)
 	c.node.param = n
 }
-func (c *NodeCfgr) GET(t, d string, h func(http.ResponseWriter, *http.Request, map[string]string)) {
+func (c *NodeCfgr) GET(t, d string, h Handler) {
 	_, exists := c.node.methods[GET]
 	if exists {
 		c.report.Error("GET handler already specified")
@@ -54,7 +53,7 @@ func (c *NodeCfgr) GET(t, d string, h func(http.ResponseWriter, *http.Request, m
 		handler:     h,
 	}
 }
-func (c *NodeCfgr) POST(t, d string, h func(http.ResponseWriter, *http.Request, map[string]string)) {
+func (c *NodeCfgr) POST(t, d string, h Handler) {
 	_, exists := c.node.methods[POST]
 	if exists {
 		c.report.Error("POST handler already specified")
@@ -66,7 +65,7 @@ func (c *NodeCfgr) POST(t, d string, h func(http.ResponseWriter, *http.Request, 
 		handler:     h,
 	}
 }
-func (c *NodeCfgr) PUT(t, d string, h func(http.ResponseWriter, *http.Request, map[string]string)) {
+func (c *NodeCfgr) PUT(t, d string, h Handler) {
 	_, exists := c.node.methods[PUT]
 	if exists {
 		c.report.Error("PUT handler already specified")
@@ -78,7 +77,7 @@ func (c *NodeCfgr) PUT(t, d string, h func(http.ResponseWriter, *http.Request, m
 		handler:     h,
 	}
 }
-func (c *NodeCfgr) PATCH(t, d string, h func(http.ResponseWriter, *http.Request, map[string]string)) {
+func (c *NodeCfgr) PATCH(t, d string, h Handler) {
 	_, exists := c.node.methods[PATCH]
 	if exists {
 		c.report.Error("PATCH handler already specified")
@@ -90,7 +89,7 @@ func (c *NodeCfgr) PATCH(t, d string, h func(http.ResponseWriter, *http.Request,
 		handler:     h,
 	}
 }
-func (c *NodeCfgr) DELETE(t, d string, h func(http.ResponseWriter, *http.Request, map[string]string)) {
+func (c *NodeCfgr) DELETE(t, d string, h Handler) {
 	_, exists := c.node.methods[DELETE]
 	if exists {
 		c.report.Error("DELETE handler already specified")
@@ -102,7 +101,7 @@ func (c *NodeCfgr) DELETE(t, d string, h func(http.ResponseWriter, *http.Request
 		handler:     h,
 	}
 }
-func (c *NodeCfgr) HEAD(t, d string, h func(http.ResponseWriter, *http.Request, map[string]string)) {
+func (c *NodeCfgr) HEAD(t, d string, h Handler) {
 	_, exists := c.node.methods[HEAD]
 	if exists {
 		c.report.Error("HEAD handler already specified")
@@ -114,7 +113,7 @@ func (c *NodeCfgr) HEAD(t, d string, h func(http.ResponseWriter, *http.Request, 
 		handler:     h,
 	}
 }
-func (c *NodeCfgr) CONNECT(t, d string, h func(http.ResponseWriter, *http.Request, map[string]string)) {
+func (c *NodeCfgr) CONNECT(t, d string, h Handler) {
 	_, exists := c.node.methods[CONNECT]
 	if exists {
 		c.report.Error("CONNECT handler already specified")
@@ -126,7 +125,7 @@ func (c *NodeCfgr) CONNECT(t, d string, h func(http.ResponseWriter, *http.Reques
 		handler:     h,
 	}
 }
-func (c *NodeCfgr) OPTIONS(t, d string, h func(http.ResponseWriter, *http.Request, map[string]string)) {
+func (c *NodeCfgr) OPTIONS(t, d string, h Handler) {
 	_, exists := c.node.methods[OPTIONS]
 	if exists {
 		c.report.Error("OPTIONS handler already specified")
@@ -138,7 +137,7 @@ func (c *NodeCfgr) OPTIONS(t, d string, h func(http.ResponseWriter, *http.Reques
 		handler:     h,
 	}
 }
-func (c *NodeCfgr) TRACE(t, d string, h func(http.ResponseWriter, *http.Request, map[string]string)) {
+func (c *NodeCfgr) TRACE(t, d string, h Handler) {
 	_, exists := c.node.methods[TRACE]
 	if exists {
 		c.report.Error("TRACE handler already specified")

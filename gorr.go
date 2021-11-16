@@ -1,7 +1,6 @@
 package gorr
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -39,33 +38,12 @@ func New(cfg func(*DispatcherCfgr)) (d *Dispatcher, r *report.RContext) {
 	return
 }
 func (d *Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	var path = r.URL.Path
 	var current = d.root
+	var parent = current
 	var ok bool
-	params, err := handle(
-		r.URL.Path,
-		func(f string, fn func(string)) {
-			current, ok = current.Child(f)
-			if !ok {
-				w.Write([]byte("not found 1"))
-				w.WriteHeader(404)
-				return
-			}
-			pname, ok := current.Param()
-			if ok {
-				fn(pname)
-			}
-		})
-	if err != nil {
-		w.Write([]byte("not found 2"))
-		w.WriteHeader(404)
-		return
-	}
-	m := current.Handler(node.HTTPMethod(r.Method))
-	handle := m.Handler()
-	handle(w, r, params)
-}
-func handle(path string, iterBlck func(string, func(string))) (params map[string]string, err error) {
-	params = map[string]string{
+	var err error
+	var params = map[string]string{
 		"$path": path,
 	}
 	fragments := []string{}
@@ -79,16 +57,27 @@ func handle(path string, iterBlck func(string, func(string))) (params map[string
 			params = nil
 			return
 		}
-		iterBlck(
-			fragment,
-			func(k string) {
-				_, exists := params[k]
-				if exists {
-					err = fmt.Errorf("parameter \"%s\" already marked", k)
-					return
-				}
-				params[k] = fragment
-			})
+		current, ok = parent.Child(fragment)
+		if !ok {
+			current.HandleNotFoundError(w, r, params)
+			return
+		}
+		pname, ok := current.Param()
+		if ok {
+			_, exists := params[pname]
+			if exists {
+				// TODO:
+				// err = fmt.Errorf("parameter \"%s\" already marked", pname)
+				return
+			}
+			params[pname] = fragment
+		}
+		parent = current
 	}
-	return
+	if err != nil {
+		w.Write([]byte("not found 2"))
+		w.WriteHeader(404)
+		return
+	}
+	current.Handle(w, r, params)
 }

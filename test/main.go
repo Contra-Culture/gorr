@@ -17,8 +17,9 @@ func main() {
 					cfg.GET(
 						"welcome",
 						"latest content",
-						func(w http.ResponseWriter, r *http.Request, params map[string]string) {
+						func(w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
 							w.Write([]byte("welcome"))
+							return
 						})
 					cfg.Static(
 						"articles",
@@ -27,8 +28,9 @@ func main() {
 							cfg.GET(
 								"all-articles",
 								"list of all articles, ordered by publication date",
-								func(w http.ResponseWriter, r *http.Request, params map[string]string) {
+								func(w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
 									w.Write([]byte("all-articles"))
+									return
 								})
 							cfg.Param(
 								"articleID",
@@ -37,9 +39,10 @@ func main() {
 									cfg.GET(
 										"article",
 										"single article full presentation",
-										func(w http.ResponseWriter, r *http.Request, params map[string]string) {
+										func(w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
 											w.Write([]byte(fmt.Sprintf("article: %s %#v", params["articleID"], params)))
 											w.WriteHeader(200)
+											return
 										})
 								})
 						})
