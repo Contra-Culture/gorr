@@ -3,9 +3,9 @@ package gorr
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/Contra-Culture/gorr/node"
-	"github.com/Contra-Culture/gorr/url"
 	"github.com/Contra-Culture/report"
 )
 
@@ -43,7 +43,7 @@ func (d *Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("\n\nServeHTTP dispatcher %#v, %s\n\n", d, r.URL.String())
 	var current = d.root
 	var ok bool
-	params, err := url.Handle(
+	params, err := handle(
 		r.URL.Path,
 		func(f string, fn func(string)) {
 			if current != nil {
@@ -70,4 +70,32 @@ func (d *Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m := current.Handler(node.HTTPMethod(r.Method))
 	handle := m.Handler()
 	handle(w, r, params)
+}
+func handle(path string, iterBlck func(string, func(string))) (params map[string]string, err error) {
+	params = map[string]string{
+		"$path": path,
+	}
+	fragments := []string{}
+	for _, f := range strings.Split(path, "/") {
+		if len(f) > 0 {
+			fragments = append(fragments, f)
+		}
+	}
+	for _, fragment := range fragments {
+		if err != nil {
+			params = nil
+			return
+		}
+		iterBlck(
+			fragment,
+			func(k string) {
+				_, exists := params[k]
+				if exists {
+					err = fmt.Errorf("parameter \"%s\" already marked", k)
+					return
+				}
+				params[k] = fragment
+			})
+	}
+	return
 }
