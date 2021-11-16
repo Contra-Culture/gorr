@@ -1,6 +1,7 @@
 package gorr
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -38,15 +39,17 @@ func New(cfg func(*DispatcherCfgr)) (d *Dispatcher, r *report.RContext) {
 	return
 }
 func (d *Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var path = r.URL.Path
-	var current = d.root
-	var parent = current
-	var ok bool
-	var err error
-	var params = map[string]string{
-		"$path": path,
-	}
-	fragments := []string{}
+	var (
+		path      = r.URL.Path
+		current   = d.root
+		parent    = current
+		ok        bool
+		err       error
+		fragments = []string{}
+		params    = map[string]string{
+			"$path": path,
+		}
+	)
 	for _, f := range strings.Split(path, "/") {
 		if len(f) > 0 {
 			fragments = append(fragments, f)
@@ -67,8 +70,7 @@ func (d *Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			_, exists := params[pname]
 			if exists {
 				// TODO:
-				// err = fmt.Errorf("parameter \"%s\" already marked", pname)
-				return
+				panic(fmt.Errorf("parameter \"%s\" already marked", pname))
 			}
 			params[pname] = fragment
 		}
