@@ -17,6 +17,8 @@ type (
 		dispatcher *Dispatcher
 		report     *report.RContext
 	}
+	PathHelper  func(map[string]string) string
+	PathHelpers map[string]PathHelper
 )
 
 func (c *DispatcherCfgr) Root(d string, cfg func(*node.NodeCfgr)) {
@@ -24,7 +26,7 @@ func (c *DispatcherCfgr) Root(d string, cfg func(*node.NodeCfgr)) {
 		c.report.Error("root node already specified")
 		return
 	}
-	root, report := node.New("/", d, cfg)
+	root, report := node.New(cfg)
 	c.dispatcher.root = root
 	c.report = report
 }

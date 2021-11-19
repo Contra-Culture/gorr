@@ -13,33 +13,44 @@ type (
 	}
 )
 
-func (c *NodeCfgr) Wildcard(t, d string, cfg func(*NodeCfgr)) {
+func (c *NodeCfgr) Title(t string) {
+	if len(c.node.title) > 0 {
+		c.report.Error("title already specified")
+	}
+	c.node.title = t
+}
+func (c *NodeCfgr) Description(d string) {
+	if len(c.node.description) > 0 {
+		c.report.Error("description already specified")
+	}
+	c.node.description = d
+}
+func (c *NodeCfgr) Wildcard(cfg func(*NodeCfgr)) {
 	if c.node.wildcard != nil {
 		c.report.Error("* node already specified")
 		return
 	}
-	rctx := c.report.Context(fmt.Sprintf("*%s", t))
-	n := new(c.node, t, d, false, rctx, cfg)
+	rctx := c.report.Context("*")
+	n := new(c.node, false, rctx, cfg)
 	c.node.wildcard = n
 }
-func (c *NodeCfgr) Static(t, d string, cfg func(*NodeCfgr)) {
-	_, exists := c.node.static[t]
+func (c *NodeCfgr) Static(chunk string, cfg func(*NodeCfgr)) {
+	_, exists := c.node.static[chunk]
 	if exists {
-		c.report.Error(fmt.Sprintf("static \"%s\" node already specified", t))
+		c.report.Error(fmt.Sprintf("static \"%s\" node already specified", chunk))
 		return
 	}
-	rctx := c.report.Context(fmt.Sprintf("%%%s", t))
-	n := new(c.node, t, d, false, rctx, cfg)
-	c.node.static[t] = n
+	rctx := c.report.Context(fmt.Sprintf("%%%s", chunk))
+	n := new(c.node, false, rctx, cfg)
+	c.node.static[chunk] = n
 }
-func (c *NodeCfgr) Param(t, d string, cfg func(*NodeCfgr)) {
+func (c *NodeCfgr) Param(name string, cfg func(*NodeCfgr)) {
 	if c.node.param != nil {
-		c.report.Error(fmt.Sprintf("param \":%s\" node already specified", t))
+		c.report.Error(fmt.Sprintf("param \":%s\" node already specified", name))
 		return
 	}
-	rctx := c.report.Context(fmt.Sprintf(":%s", t))
-	n := new(c.node, t, d, true, rctx, cfg)
-	c.node.param = n
+	rctx := c.report.Context(fmt.Sprintf(":%s", name))
+	c.node.param = new(c.node, true, rctx, cfg)
 }
 func (c *NodeCfgr) HandleNotFoundErrorWith(h Handler) {
 	if c.node.__notFoundErrorHandler != nil {
@@ -168,5 +179,16 @@ func (c *NodeCfgr) TRACE(t, d string, h Handler) {
 		title:       t,
 		description: d,
 		handler:     h,
+	}
+}
+func (c *NodeCfgr) check() {
+	if len(c.node.title) == 0 {
+		c.report.Error("node title is not specified")
+	}
+	if len(c.node.description) == 0 {
+		c.report.Error("node description is not specified")
+	}
+	if len(c.node.methods) == 0 && len(c.node.static) == 0 && c.node.param == nil && c.node.wildcard == nil {
+		c.report.Error("node has neither methods nor children nodes specified")
 	}
 }

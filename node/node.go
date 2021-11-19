@@ -42,19 +42,17 @@ const (
 	PATCH   = "PATCH"
 )
 
-func New(t, d string, cfg func(*NodeCfgr)) (n *Node, r *report.RContext) {
-	r = report.New(t)
-	n = new(nil, t, d, false, r, cfg)
+func New(cfg func(*NodeCfgr)) (n *Node, r *report.RContext) {
+	r = report.New("root")
+	n = new(nil, false, r, cfg)
 	return
 }
-func new(p *Node, t, d string, isProp bool, rctx *report.RContext, cfg func(*NodeCfgr)) (n *Node) {
+func new(p *Node, isProp bool, rctx *report.RContext, cfg func(*NodeCfgr)) (n *Node) {
 	n = &Node{
-		parent:      p,
-		isParam:     isProp,
-		title:       t,
-		description: d,
-		methods:     map[HTTPMethod]*Method{},
-		static:      map[string]*Node{},
+		parent:  p,
+		isParam: isProp,
+		methods: map[HTTPMethod]*Method{},
+		static:  map[string]*Node{},
 	}
 	cfg(
 		&NodeCfgr{

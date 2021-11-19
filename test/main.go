@@ -41,8 +41,9 @@ func main() {
 						})
 					root.Static(
 						"articles",
-						"articles resource.",
 						func(articles *node.NodeCfgr) {
+							articles.Title("articles")
+							articles.Description("articles resource.")
 							articles.GET(
 								"all-articles",
 								"list of all articles, ordered by publication date",
@@ -52,8 +53,9 @@ func main() {
 								})
 							articles.Param(
 								"articleID",
-								"single article resource",
 								func(article *node.NodeCfgr) {
+									article.Title("articleID")
+									article.Description("single article resource")
 									article.GET(
 										"article",
 										"single article full presentation",
