@@ -11,6 +11,10 @@ type (
 		node   *Node
 		report *report.RContext
 	}
+	MethodCfgr struct {
+		method *Method
+		report *report.RContext
+	}
 )
 
 func (c *NodeCfgr) Title(t string) {
@@ -73,113 +77,131 @@ func (c *NodeCfgr) HandleMethodNotAllowedErrorWith(h Handler) {
 	}
 	c.node.__methodNotAllowedErrorHandler = h
 }
-func (c *NodeCfgr) GET(t, d string, h Handler) {
+func (c *NodeCfgr) GET(cfg func(*MethodCfgr)) {
 	_, exists := c.node.methods[GET]
 	if exists {
 		c.report.Error("GET handler already specified")
 		return
 	}
-	c.node.methods[GET] = &Method{
-		title:       t,
-		description: d,
-		handler:     h,
-	}
+	m := &Method{}
+	cfg(
+		&MethodCfgr{
+			method: m,
+			report: c.report.Context("GET"),
+		})
+	c.node.methods[GET] = m
 }
-func (c *NodeCfgr) POST(t, d string, h Handler) {
+func (c *NodeCfgr) POST(cfg func(*MethodCfgr)) {
 	_, exists := c.node.methods[POST]
 	if exists {
 		c.report.Error("POST handler already specified")
 		return
 	}
-	c.node.methods[POST] = &Method{
-		title:       t,
-		description: d,
-		handler:     h,
-	}
+	m := &Method{}
+	cfg(
+		&MethodCfgr{
+			method: m,
+			report: c.report.Context("POST"),
+		})
+	c.node.methods[POST] = m
 }
-func (c *NodeCfgr) PUT(t, d string, h Handler) {
+func (c *NodeCfgr) PUT(cfg func(*MethodCfgr)) {
 	_, exists := c.node.methods[PUT]
 	if exists {
 		c.report.Error("PUT handler already specified")
 		return
 	}
-	c.node.methods[PUT] = &Method{
-		title:       t,
-		description: d,
-		handler:     h,
-	}
+	m := &Method{}
+	cfg(
+		&MethodCfgr{
+			method: m,
+			report: c.report.Context("PUT"),
+		})
+	c.node.methods[PUT] = m
 }
-func (c *NodeCfgr) PATCH(t, d string, h Handler) {
+func (c *NodeCfgr) PATCH(cfg func(*MethodCfgr)) {
 	_, exists := c.node.methods[PATCH]
 	if exists {
 		c.report.Error("PATCH handler already specified")
 		return
 	}
-	c.node.methods[PATCH] = &Method{
-		title:       t,
-		description: d,
-		handler:     h,
-	}
+	m := &Method{}
+	cfg(
+		&MethodCfgr{
+			method: m,
+			report: c.report.Context("PATCH"),
+		})
+	c.node.methods[PATCH] = m
 }
-func (c *NodeCfgr) DELETE(t, d string, h Handler) {
+func (c *NodeCfgr) DELETE(cfg func(*MethodCfgr)) {
 	_, exists := c.node.methods[DELETE]
 	if exists {
 		c.report.Error("DELETE handler already specified")
 		return
 	}
-	c.node.methods[DELETE] = &Method{
-		title:       t,
-		description: d,
-		handler:     h,
-	}
+	m := &Method{}
+	cfg(
+		&MethodCfgr{
+			method: m,
+			report: c.report.Context("DELETE"),
+		})
+	c.node.methods[DELETE] = m
 }
-func (c *NodeCfgr) HEAD(t, d string, h Handler) {
+func (c *NodeCfgr) HEAD(cfg func(*MethodCfgr)) {
 	_, exists := c.node.methods[HEAD]
 	if exists {
 		c.report.Error("HEAD handler already specified")
 		return
 	}
-	c.node.methods[HEAD] = &Method{
-		title:       t,
-		description: d,
-		handler:     h,
-	}
+	m := &Method{}
+	cfg(
+		&MethodCfgr{
+			method: m,
+			report: c.report.Context("HEAD"),
+		})
+	c.node.methods[HEAD] = m
 }
-func (c *NodeCfgr) CONNECT(t, d string, h Handler) {
+func (c *NodeCfgr) CONNECT(cfg func(*MethodCfgr)) {
 	_, exists := c.node.methods[CONNECT]
 	if exists {
 		c.report.Error("CONNECT handler already specified")
 		return
 	}
-	c.node.methods[CONNECT] = &Method{
-		title:       t,
-		description: d,
-		handler:     h,
-	}
+	m := &Method{}
+	cfg(
+		&MethodCfgr{
+			method: m,
+			report: c.report.Context("CONNECT"),
+		})
+	c.node.methods[CONNECT] = m
 }
-func (c *NodeCfgr) OPTIONS(t, d string, h Handler) {
+func (c *NodeCfgr) OPTIONS(cfg func(*MethodCfgr)) {
 	_, exists := c.node.methods[OPTIONS]
 	if exists {
 		c.report.Error("OPTIONS handler already specified")
 		return
 	}
-	c.node.methods[OPTIONS] = &Method{
-		title:       t,
-		description: d,
-		handler:     h,
-	}
+	m := &Method{}
+	cfg(
+		&MethodCfgr{
+			method: m,
+			report: c.report.Context("OPTIONS"),
+		})
+	c.node.methods[OPTIONS] = m
 }
-func (c *NodeCfgr) TRACE(t, d string, h Handler) {
+func (c *NodeCfgr) TRACE(cfg func(*MethodCfgr)) {
 	_, exists := c.node.methods[TRACE]
 	if exists {
 		c.report.Error("TRACE handler already specified")
 		return
 	}
-	c.node.methods[TRACE] = &Method{
-		title:       t,
-		description: d,
-		handler:     h,
-	}
+	m := &Method{}
+	cfg(
+		&MethodCfgr{
+			method: m,
+			report: c.report.Context("PUT"),
+		})
+	c.node.methods[TRACE] = m
 }
 func (c *NodeCfgr) check() {
 	if len(c.node.title) == 0 {
@@ -191,4 +213,25 @@ func (c *NodeCfgr) check() {
 	if len(c.node.methods) == 0 && len(c.node.static) == 0 && c.node.param == nil && c.node.wildcard == nil {
 		c.report.Error("node has neither methods nor children nodes specified")
 	}
+}
+func (c *MethodCfgr) Title(t string) {
+	if len(c.method.title) > 0 {
+		c.report.Error("title already specified")
+		return
+	}
+	c.method.title = t
+}
+func (c *MethodCfgr) Description(d string) {
+	if len(c.method.description) > 0 {
+		c.report.Error("description already specified")
+		return
+	}
+	c.method.description = d
+}
+func (c *MethodCfgr) Handler(h Handler) {
+	if c.method.handler != nil {
+		c.report.Error("handler already specified")
+		return
+	}
+	c.method.handler = h
 }

@@ -33,11 +33,14 @@ func main() {
 							return
 						})
 					root.GET(
-						"welcome",
-						"latest content",
-						func(w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
-							w.Write([]byte("welcome"))
-							return
+						func(cfg *node.MethodCfgr) {
+							cfg.Title("welcome")
+							cfg.Description("latest content")
+							cfg.Handler(
+								func(w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
+									w.Write([]byte("welcome"))
+									return
+								})
 						})
 					root.Static(
 						"articles",
@@ -45,11 +48,14 @@ func main() {
 							articles.Title("articles")
 							articles.Description("articles resource.")
 							articles.GET(
-								"all-articles",
-								"list of all articles, ordered by publication date",
-								func(w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
-									w.Write([]byte("all-articles"))
-									return
+								func(cfg *node.MethodCfgr) {
+									cfg.Title("all-articles")
+									cfg.Description("list of all articles, ordered by publication date")
+									cfg.Handler(
+										func(w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
+											w.Write([]byte("all-articles"))
+											return
+										})
 								})
 							articles.Param(
 								"articleID",
@@ -57,12 +63,15 @@ func main() {
 									article.Title("articleID")
 									article.Description("single article resource")
 									article.GET(
-										"article",
-										"single article full presentation",
-										func(w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
-											w.Write([]byte(fmt.Sprintf("article: %s %#v", params["articleID"], params)))
-											w.WriteHeader(200)
-											return
+										func(cfg *node.MethodCfgr) {
+											cfg.Title("article")
+											cfg.Description("single article full presentation")
+											cfg.Handler(
+												func(w http.ResponseWriter, r *http.Request, params map[string]string) (err error) {
+													w.Write([]byte(fmt.Sprintf("article: %s %#v", params["articleID"], params)))
+													w.WriteHeader(200)
+													return
+												})
 										})
 								})
 						})
