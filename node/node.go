@@ -139,9 +139,9 @@ func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 		n = parent.param
 		fmt.Printf("\n\tparam node: %#v", n)
 		if n != nil {
+			params.Set(n.title, f)
 			switch matcher := n.matcher.(type) {
 			case map[string]bool:
-				params.Set(n.title, f)
 				if matcher[f] {
 					parent = n
 					continue
@@ -150,7 +150,6 @@ func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 				n.HandleNotFoundError(w, r, params)
 				return
 			case func(string) bool:
-				params.Set(n.title, f)
 				if matcher(f) {
 					parent = n
 					continue
@@ -159,18 +158,18 @@ func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 				n.HandleNotFoundError(w, r, params)
 				return
 			case Query:
-				params.Set(n.title, f)
+				idParamName := fmt.Sprintf("%sID", n.title)
+				params.Set(idParamName, f)
 				v, err := matcher(params)
 				if err != nil {
 					fmt.Printf("\n\t\tquery not found-1")
 					n.HandleNotFoundError(w, r, params)
 					return
 				}
-				params.Set(n.title, v) // should be different key
+				params.Set(n.title, v)
 				parent = n
 				continue
 			default:
-				params.Set(n.title, f)
 				fmt.Printf("\n\t\tdefault section")
 				parent = n
 				continue

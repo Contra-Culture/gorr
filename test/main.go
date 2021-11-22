@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -57,24 +58,25 @@ func main() {
 											return
 										})
 								})
-							articles.StringParam(
-								"articleID",
-								func(article *node.StringParamNodeCfgr) {
-									article.Title("articleID")
+							articles.IDParam(
+								"article",
+								func(article *node.IDParamNodeCfgr) {
+									article.Title("article")
 									article.Description("single article resource")
-									// article.Query(
-									// 	func(params node.Params) (obj interface{}, err error) {
-									// 		id, _ := params.Get("articleID")
-									// 		idString, ok := id.(string)
-									// 		if !ok {
-									// 			err = errors.New("no articleID given")
-									// 			return
-									// 		}
-									// 		obj = map[string]string{
-									// 			"id": idString,
-									// 		}
-									// 		return
-									// 	})
+									article.Query(
+										func(params node.Params) (obj interface{}, err error) {
+											id, _ := params.Get("articleID")
+											idString, ok := id.(string)
+											if !ok {
+												err = errors.New("no articleID given")
+												fmt.Printf("\n\nNOT FOUND: %s\n\n", err.Error())
+												return
+											}
+											obj = map[string]string{
+												"id": idString,
+											}
+											return
+										})
 									article.GET(
 										func(cfg *node.MethodCfgr) {
 											cfg.Title("article")
@@ -83,11 +85,16 @@ func main() {
 												func(w http.ResponseWriter, r *http.Request, params node.Params) (err error) {
 													w.WriteHeader(200)
 													articleID, ok := params.Get("articleID")
-													if ok {
-														w.Write([]byte(fmt.Sprintf("article: %s %#v", articleID, params)))
-													} else {
+													if !ok {
 														w.Write([]byte(fmt.Sprintf("article: <no articleID> %#v", params)))
+														return
 													}
+													article, ok := params.Get("article")
+													if ok {
+														w.Write([]byte(fmt.Sprintf("article: %s %#v | %#v", articleID, article, params)))
+														return
+													}
+													w.Write([]byte(fmt.Sprintf("article: %s [no article!] | %#v", articleID, params)))
 													return
 												})
 										})
