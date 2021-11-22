@@ -1,9 +1,7 @@
 package gorr
 
 import (
-	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/Contra-Culture/gorr/node"
 	"github.com/Contra-Culture/report"
@@ -21,7 +19,7 @@ type (
 	PathHelpers map[string]PathHelper
 )
 
-func (c *DispatcherCfgr) Root(d string, cfg func(*node.NodeCfgr)) {
+func (c *DispatcherCfgr) Root(d string, cfg func(*node.StaticNodeCfgr)) {
 	if c.dispatcher.root != nil {
 		c.report.Error("root node already specified")
 		return
@@ -41,42 +39,5 @@ func New(cfg func(*DispatcherCfgr)) (d *Dispatcher, r *report.RContext) {
 	return
 }
 func (d *Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var (
-		path      = r.URL.Path
-		current   = d.root
-		parent    = current
-		ok        bool
-		err       error
-		fragments = []string{}
-		params    = map[string]string{
-			"$path": path,
-		}
-	)
-	for _, f := range strings.Split(path, "/") {
-		if len(f) > 0 {
-			fragments = append(fragments, f)
-		}
-	}
-	for _, fragment := range fragments {
-		if err != nil {
-			params = nil
-			return
-		}
-		current, ok = parent.Child(fragment)
-		if !ok {
-			current.HandleNotFoundError(w, r, params)
-			return
-		}
-		pname, ok := current.Param()
-		if ok {
-			_, exists := params[pname]
-			if exists {
-				// TODO:
-				panic(fmt.Errorf("parameter \"%s\" already marked", pname))
-			}
-			params[pname] = fragment
-		}
-		parent = current
-	}
-	current.Handle(w, r, params)
+	d.root.Handle(w, r)
 }

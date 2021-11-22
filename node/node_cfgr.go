@@ -11,6 +11,21 @@ type (
 		node   *Node
 		report *report.RContext
 	}
+	WildcardNodeCfgr struct {
+		NodeCfgr
+	}
+	StaticNodeCfgr struct {
+		NodeCfgr
+	}
+	StringParamNodeCfgr struct {
+		NodeCfgr
+	}
+	IDParamNodeCfgr struct {
+		NodeCfgr
+	}
+	VariantParamNodeCfgr struct {
+		NodeCfgr
+	}
 	MethodCfgr struct {
 		method *Method
 		report *report.RContext
@@ -29,32 +44,86 @@ func (c *NodeCfgr) Description(d string) {
 	}
 	c.node.description = d
 }
-func (c *NodeCfgr) Wildcard(cfg func(*NodeCfgr)) {
+func (c *NodeCfgr) Wildcard(cfg func(*WildcardNodeCfgr)) {
 	if c.node.wildcard != nil {
 		c.report.Error("* node already specified")
 		return
 	}
 	rctx := c.report.Context("*")
-	n := new(c.node, false, rctx, cfg)
+	n := new(c.node, WILDCARD)
+	cfg(
+		&WildcardNodeCfgr{
+			NodeCfgr{
+				node:   n,
+				report: rctx,
+			},
+		})
 	c.node.wildcard = n
 }
-func (c *NodeCfgr) Static(chunk string, cfg func(*NodeCfgr)) {
-	_, exists := c.node.static[chunk]
+func (c *NodeCfgr) Static(f string, cfg func(*StaticNodeCfgr)) {
+	_, exists := c.node.static[f]
 	if exists {
-		c.report.Error(fmt.Sprintf("static \"%s\" node already specified", chunk))
+		c.report.Error(fmt.Sprintf("static \"%s\" node already specified", f))
 		return
 	}
-	rctx := c.report.Context(fmt.Sprintf("%%%s", chunk))
-	n := new(c.node, false, rctx, cfg)
-	c.node.static[chunk] = n
+	rctx := c.report.Context(fmt.Sprintf("%%%s", f))
+	n := new(c.node, STATIC)
+	cfg(
+		&StaticNodeCfgr{
+			NodeCfgr{
+				node:   n,
+				report: rctx,
+			},
+		})
+	c.node.static[f] = n
 }
-func (c *NodeCfgr) Param(name string, cfg func(*NodeCfgr)) {
+func (c *NodeCfgr) StringParam(name string, cfg func(*StringParamNodeCfgr)) {
 	if c.node.param != nil {
 		c.report.Error(fmt.Sprintf("param \":%s\" node already specified", name))
 		return
 	}
 	rctx := c.report.Context(fmt.Sprintf(":%s", name))
-	c.node.param = new(c.node, true, rctx, cfg)
+	n := new(c.node, STRING_PARAM)
+	cfg(
+		&StringParamNodeCfgr{
+			NodeCfgr{
+				node:   n,
+				report: rctx,
+			},
+		})
+	c.node.param = n
+}
+func (c *NodeCfgr) IDParam(name string, cfg func(*IDParamNodeCfgr)) {
+	if c.node.param != nil {
+		c.report.Error(fmt.Sprintf("param \":%s\" node already specified", name))
+		return
+	}
+	rctx := c.report.Context(fmt.Sprintf(":%s", name))
+	n := new(c.node, ID_PARAM)
+	cfg(
+		&IDParamNodeCfgr{
+			NodeCfgr{
+				node:   n,
+				report: rctx,
+			},
+		})
+	c.node.param = n
+}
+func (c *NodeCfgr) VariantParam(name string, cfg func(*VariantParamNodeCfgr)) {
+	if c.node.param != nil {
+		c.report.Error(fmt.Sprintf("param \":%s\" node already specified", name))
+		return
+	}
+	rctx := c.report.Context(fmt.Sprintf(":%s", name))
+	n := new(c.node, VARIANT_PARAM)
+	cfg(
+		&VariantParamNodeCfgr{
+			NodeCfgr{
+				node:   n,
+				report: rctx,
+			},
+		})
+	c.node.param = n
 }
 func (c *NodeCfgr) HandleNotFoundErrorWith(h Handler) {
 	if c.node.__notFoundErrorHandler != nil {
@@ -213,6 +282,35 @@ func (c *NodeCfgr) check() {
 	if len(c.node.methods) == 0 && len(c.node.static) == 0 && c.node.param == nil && c.node.wildcard == nil {
 		c.report.Error("node has neither methods nor children nodes specified")
 	}
+}
+func (c *StaticNodeCfgr) Fragment(f string) {
+	if c.node.matcher != nil {
+		c.report.Error("fragment already specified")
+		return
+	}
+	c.node.matcher = f
+}
+func (c *StringParamNodeCfgr) Matcher(m func(string) bool) {
+	if c.node.matcher != nil {
+		c.report.Error("fragment already specified")
+		return
+	}
+	c.node.matcher = m
+}
+func (c *VariantParamNodeCfgr) Variant(v string) {
+	variants := c.node.matcher.(map[string]bool)
+	if variants[v] {
+		c.report.Error(fmt.Sprintf("variant \"%s\"already specified", v))
+		return
+	}
+	variants[v] = true
+}
+func (c *IDParamNodeCfgr) Query(q Query) {
+	if c.node.matcher != nil {
+		c.report.Error("param already specified")
+		return
+	}
+	c.node.matcher = q
 }
 func (c *MethodCfgr) Title(t string) {
 	if len(c.method.title) > 0 {

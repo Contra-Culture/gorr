@@ -24,7 +24,7 @@ var _ = Describe("gorr", func() {
 					func(cfg *DispatcherCfgr) {
 						cfg.Root(
 							"Test root.",
-							func(cfg *node.NodeCfgr) {
+							func(cfg *node.StaticNodeCfgr) {
 							})
 					})
 				Expect(d).NotTo(BeNil())
