@@ -20,8 +20,6 @@ type (
 		afterHandler                   Handler
 		inheritableAfterHandler        Handler
 		inheritedAfterHandlers         []Handler
-		title                          string
-		description                    string
 		methods                        map[HTTPMethod]*Method
 		static                         map[string]*Node
 		param                          *Node
@@ -30,6 +28,8 @@ type (
 		__notFoundErrorHandler         Handler
 		__methodNotAllowedErrorHandler Handler
 		__internalServerErrorHandler   Handler
+		title                          string
+		description                    string
 	}
 	Method struct {
 		title       string
@@ -119,9 +119,7 @@ func (n *Node) Param() (string, bool) {
 // Handles request and/or delegates it to its child.
 func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 	var (
-		err       error
 		ok        bool
-		h         Handler
 		params    = NewParams()
 		parent    = n
 		fragments = []string{}
@@ -182,6 +180,13 @@ func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	n.handle(w, r, params)
+}
+func (n *Node) handle(w http.ResponseWriter, r *http.Request, params Params) {
+	var (
+		err error
+		h   Handler
+	)
 	method, ok := n.methods[HTTPMethod(r.Method)]
 	if !ok {
 		n.handleMethodNotAllowedError(w, r, params)
