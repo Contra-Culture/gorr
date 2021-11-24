@@ -14,13 +14,17 @@ type (
 	Node    struct {
 		typ                            NodeType
 		parent                         *Node
+		inheritableBeforeDo            Handler
+		beforeDo                       Handler
+		afterDo                        Handler
+		inheritableAfterDo             Handler
 		title                          string
 		description                    string
 		methods                        map[HTTPMethod]*Method
 		static                         map[string]*Node
 		param                          *Node
 		wildcard                       *Node
-		matcher                        interface{} // interface{} is string, map[string]bool, func(string) bool, Query
+		matcher                        interface{} // interface{} is string, map[string]bool, func(string) bool or Query
 		__notFoundErrorHandler         Handler
 		__methodNotAllowedErrorHandler Handler
 		__internalServerErrorHandler   Handler
@@ -105,56 +109,83 @@ func (n *Node) Param() (string, bool) {
 		return "", false
 	}
 }
+
+// Handles request and/or delegates it to its child.
 func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
-	fragments := []string{}
+	var (
+		err           error
+		ok            bool
+		h             Handler
+		params        = NewParams()
+		parent        = n
+		fragments     = []string{}
+		afterHandlers = []Handler{}
+	)
 	for _, f := range strings.Split(r.URL.Path, "/") {
 		if len(f) > 0 {
 			fragments = append(fragments, f)
 		}
 	}
-	params := NewParams()
-	if len(fragments) == 0 {
-		method, ok := n.methods[HTTPMethod(r.Method)]
-		if !ok {
-			n.handleMethodNotAllowedError(w, r, params)
-		}
-		err := method.handler(w, r, params)
+	h = n.inheritableBeforeDo
+	if h != nil {
+		err = h(w, r, params)
 		if err != nil {
 			n.handleInternalServerError(w, r, params)
+			return
 		}
-		return
 	}
-	var err error
-	var ok bool
-	var parent = n
+	h = n.inheritableAfterDo
+	if h != nil {
+		afterHandlers = append(afterHandlers, h)
+	}
 	for ; len(fragments) > 0; fragments = fragments[1:] {
-		fmt.Printf("\nfragments: %#v", fragments)
 		f := fragments[0]
 		n, ok = parent.static[f]
-		fmt.Printf("\n\tstatic node: %#v", n)
 		if ok {
+			h = n.inheritableBeforeDo
+			if h != nil {
+				err = n.inheritableBeforeDo(w, r, params)
+				if err != nil {
+					n.handleInternalServerError(w, r, params)
+					return
+				}
+				h = n.inheritableAfterDo
+				if h != nil {
+					afterHandlers = append(afterHandlers, h)
+				}
+			}
 			parent = n
 			continue
 		}
 		n = parent.param
-		fmt.Printf("\n\tparam node: %#v", n)
 		if n != nil {
-			params.Set(n.title, f)
+			h = n.inheritableBeforeDo
+			if h != nil {
+				err = n.inheritableBeforeDo(w, r, params)
+				if err != nil {
+					n.handleInternalServerError(w, r, params)
+					return
+				}
+			}
+			h = n.inheritableAfterDo
+			if h != nil {
+				afterHandlers = append(afterHandlers, h)
+			}
 			switch matcher := n.matcher.(type) {
 			case map[string]bool:
+				params.Set(n.title, f)
 				if matcher[f] {
 					parent = n
 					continue
 				}
-				fmt.Printf("\n\t\tquery not found--1")
 				n.HandleNotFoundError(w, r, params)
 				return
 			case func(string) bool:
+				params.Set(n.title, f)
 				if matcher(f) {
 					parent = n
 					continue
 				}
-				fmt.Printf("\n\t\tquery not found-0")
 				n.HandleNotFoundError(w, r, params)
 				return
 			case Query:
@@ -162,7 +193,6 @@ func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 				params.Set(idParamName, f)
 				v, err := matcher(params)
 				if err != nil {
-					fmt.Printf("\n\t\tquery not found-1")
 					n.HandleNotFoundError(w, r, params)
 					return
 				}
@@ -170,40 +200,64 @@ func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 				parent = n
 				continue
 			default:
-				fmt.Printf("\n\t\tdefault section")
 				parent = n
 				continue
 			}
 		} else {
 			n = parent.wildcard
-			fmt.Printf("\n\twildcard node: %#v", n)
 			if n != nil {
+				h = n.inheritableBeforeDo
+				if h != nil {
+					err = n.inheritableBeforeDo(w, r, params)
+					if err != nil {
+						n.handleInternalServerError(w, r, params)
+						return
+					}
+				}
+				h = n.inheritableAfterDo
+				if h != nil {
+					afterHandlers = append(afterHandlers, h)
+				}
 				parent = n
 				continue
 			}
-			fmt.Printf("\n\t\tquery not found-2")
 			parent.HandleNotFoundError(w, r, params)
 			return
 		}
-		method, ok := n.methods[HTTPMethod(r.Method)]
-		if !ok {
-			n.handleMethodNotAllowedError(w, r, params)
-		}
-		err = method.Handler()(w, r, params)
-		if err != nil {
-			n.handleMethodNotAllowedError(w, r, params)
-		}
-		return
 	}
 	method, ok := n.methods[HTTPMethod(r.Method)]
 	if !ok {
 		n.handleMethodNotAllowedError(w, r, params)
 		return
 	}
-	err = method.handler(w, r, params)
+	h = n.beforeDo
+	if h != nil {
+		err = h(w, r, params)
+		if err != nil {
+			n.handleInternalServerError(w, r, params)
+			return
+		}
+	}
+	err = method.Handler()(w, r, params)
 	if err != nil {
-		n.handleInternalServerError(w, r, params)
+		n.handleMethodNotAllowedError(w, r, params)
 		return
+	}
+	h = n.afterDo
+	if h != nil {
+		err = h(w, r, params)
+		if err != nil {
+			n.handleInternalServerError(w, r, params)
+			return
+		}
+	}
+	for i := len(afterHandlers) - 1; i >= 0; i-- {
+		h = afterHandlers[i]
+		err = h(w, r, params)
+		if err != nil {
+			n.handleInternalServerError(w, r, params)
+			return
+		}
 	}
 }
 func (n *Node) handleMethodNotAllowedError(w http.ResponseWriter, r *http.Request, params Params) (err error) {

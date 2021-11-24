@@ -33,6 +33,26 @@ func main() {
 							w.Write([]byte("internal server error"))
 							return
 						})
+					root.BeforeDo(
+						func(w http.ResponseWriter, r *http.Request, params node.Params) (err error) {
+							w.Write([]byte(fmt.Sprintf("<pre>root before do: %#v</pre>", params)))
+							return
+						})
+					root.InheritableBeforeDo(
+						func(w http.ResponseWriter, r *http.Request, params node.Params) (err error) {
+							w.Write([]byte(fmt.Sprintf("<pre>root inheritable before do: %#v</pre>", params)))
+							return
+						})
+					root.AfterDo(
+						func(w http.ResponseWriter, r *http.Request, params node.Params) (err error) {
+							fmt.Printf("\nroot after do: %#v", params)
+							return
+						})
+					root.InheritableAfterDo(
+						func(w http.ResponseWriter, r *http.Request, params node.Params) (err error) {
+							fmt.Printf("\nroot inheritable after do: %#v", params)
+							return
+						})
 					root.GET(
 						func(cfg *node.MethodCfgr) {
 							cfg.Title("welcome")
@@ -48,6 +68,26 @@ func main() {
 						func(articles *node.StaticNodeCfgr) {
 							articles.Title("articles")
 							articles.Description("articles resource.")
+							articles.BeforeDo(
+								func(w http.ResponseWriter, r *http.Request, params node.Params) (err error) {
+									w.Write([]byte(fmt.Sprintf("<pre>articles before do: %#v</pre>", params)))
+									return
+								})
+							articles.InheritableBeforeDo(
+								func(w http.ResponseWriter, r *http.Request, params node.Params) (err error) {
+									w.Write([]byte(fmt.Sprintf("<pre>articles inheritable before do: %#v</pre>", params)))
+									return
+								})
+							articles.AfterDo(
+								func(w http.ResponseWriter, r *http.Request, params node.Params) (err error) {
+									fmt.Printf("\narticles after do: %#v", params)
+									return
+								})
+							articles.InheritableAfterDo(
+								func(w http.ResponseWriter, r *http.Request, params node.Params) (err error) {
+									fmt.Printf("\narticles inheritable after do: %#v", params)
+									return
+								})
 							articles.GET(
 								func(cfg *node.MethodCfgr) {
 									cfg.Title("all-articles")
@@ -63,6 +103,26 @@ func main() {
 								func(article *node.IDParamNodeCfgr) {
 									article.Title("article")
 									article.Description("single article resource")
+									article.BeforeDo(
+										func(w http.ResponseWriter, r *http.Request, params node.Params) (err error) {
+											w.Write([]byte(fmt.Sprintf("<pre>article before do: %#v</pre>", params)))
+											return
+										})
+									article.InheritableBeforeDo(
+										func(w http.ResponseWriter, r *http.Request, params node.Params) (err error) {
+											w.Write([]byte(fmt.Sprintf("<pre>article inheritable before do: %#v</pre>", params)))
+											return
+										})
+									article.AfterDo(
+										func(w http.ResponseWriter, r *http.Request, params node.Params) (err error) {
+											fmt.Printf("\narticle after do: %#v", params)
+											return
+										})
+									article.InheritableAfterDo(
+										func(w http.ResponseWriter, r *http.Request, params node.Params) (err error) {
+											fmt.Printf("\narticle inheritable after do: %#v", params)
+											return
+										})
 									article.Query(
 										func(params node.Params) (obj interface{}, err error) {
 											id, _ := params.Get("articleID")
@@ -83,7 +143,6 @@ func main() {
 											cfg.Description("single article full presentation")
 											cfg.Handler(
 												func(w http.ResponseWriter, r *http.Request, params node.Params) (err error) {
-													w.WriteHeader(200)
 													articleID, ok := params.Get("articleID")
 													if !ok {
 														w.Write([]byte(fmt.Sprintf("article: <no articleID> %#v", params)))
@@ -92,9 +151,11 @@ func main() {
 													article, ok := params.Get("article")
 													if ok {
 														w.Write([]byte(fmt.Sprintf("article: %s %#v | %#v", articleID, article, params)))
+														w.WriteHeader(200)
 														return
 													}
 													w.Write([]byte(fmt.Sprintf("article: %s [no article!] | %#v", articleID, params)))
+													err = errors.New("not found")
 													return
 												})
 										})
