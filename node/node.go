@@ -14,10 +14,12 @@ type (
 	Node    struct {
 		typ                            NodeType
 		parent                         *Node
+		inheritedBeforeHandlers        []Handler
 		inheritableBeforeHandler       Handler
 		beforeHandler                  Handler
 		afterHandler                   Handler
 		inheritableAfterHandler        Handler
+		inheritedAfterHandlers         []Handler
 		title                          string
 		description                    string
 		methods                        map[HTTPMethod]*Method
@@ -99,6 +101,10 @@ func new(p *Node, t NodeType) (n *Node) {
 		methods: map[HTTPMethod]*Method{},
 		static:  map[string]*Node{},
 	}
+	if p != nil {
+		n.inheritedBeforeHandlers = append(p.inheritedBeforeHandlers, p.inheritableBeforeHandler)
+		n.inheritedAfterHandlers = append(p.inheritedAfterHandlers, p.inheritableAfterHandler)
+	}
 	return
 }
 func (n *Node) Param() (string, bool) {
@@ -113,64 +119,27 @@ func (n *Node) Param() (string, bool) {
 // Handles request and/or delegates it to its child.
 func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 	var (
-		err           error
-		ok            bool
-		h             Handler
-		params        = NewParams()
-		parent        = n
-		fragments     = []string{}
-		afterHandlers = []Handler{}
+		err       error
+		ok        bool
+		h         Handler
+		params    = NewParams()
+		parent    = n
+		fragments = []string{}
 	)
 	for _, f := range strings.Split(r.URL.Path, "/") {
 		if len(f) > 0 {
 			fragments = append(fragments, f)
 		}
 	}
-	h = n.inheritableBeforeHandler
-	if h != nil {
-		err = h(w, r, params)
-		if err != nil {
-			n.handleInternalServerError(w, r, params)
-			return
-		}
-	}
-	h = n.inheritableAfterHandler
-	if h != nil {
-		afterHandlers = append(afterHandlers, h)
-	}
 	for ; len(fragments) > 0; fragments = fragments[1:] {
 		f := fragments[0]
 		n, ok = parent.static[f]
 		if ok {
-			h = n.inheritableBeforeHandler
-			if h != nil {
-				err = n.inheritableBeforeHandler(w, r, params)
-				if err != nil {
-					n.handleInternalServerError(w, r, params)
-					return
-				}
-				h = n.inheritableAfterHandler
-				if h != nil {
-					afterHandlers = append(afterHandlers, h)
-				}
-			}
 			parent = n
 			continue
 		}
 		n = parent.param
 		if n != nil {
-			h = n.inheritableBeforeHandler
-			if h != nil {
-				err = n.inheritableBeforeHandler(w, r, params)
-				if err != nil {
-					n.handleInternalServerError(w, r, params)
-					return
-				}
-			}
-			h = n.inheritableAfterHandler
-			if h != nil {
-				afterHandlers = append(afterHandlers, h)
-			}
 			switch matcher := n.matcher.(type) {
 			case map[string]bool:
 				params.Set(n.title, f)
@@ -206,18 +175,6 @@ func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 		} else {
 			n = parent.wildcard
 			if n != nil {
-				h = n.inheritableBeforeHandler
-				if h != nil {
-					err = n.inheritableBeforeHandler(w, r, params)
-					if err != nil {
-						n.handleInternalServerError(w, r, params)
-						return
-					}
-				}
-				h = n.inheritableAfterHandler
-				if h != nil {
-					afterHandlers = append(afterHandlers, h)
-				}
 				parent = n
 				continue
 			}
@@ -229,6 +186,22 @@ func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		n.handleMethodNotAllowedError(w, r, params)
 		return
+	}
+	for i := 0; i < len(n.inheritedBeforeHandlers); i++ {
+		h = n.inheritedBeforeHandlers[i]
+		err = h(w, r, params)
+		if err != nil {
+			n.handleInternalServerError(w, r, params)
+			return
+		}
+	}
+	h = n.inheritableBeforeHandler
+	if h != nil {
+		err = h(w, r, params)
+		if err != nil {
+			n.handleInternalServerError(w, r, params)
+			return
+		}
 	}
 	h = n.beforeHandler
 	if h != nil {
@@ -251,8 +224,16 @@ func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	for i := len(afterHandlers) - 1; i >= 0; i-- {
-		h = afterHandlers[i]
+	h = n.inheritableAfterHandler
+	if h != nil {
+		err = h(w, r, params)
+		if err != nil {
+			n.handleInternalServerError(w, r, params)
+			return
+		}
+	}
+	for i := len(n.inheritedAfterHandlers) - 1; i >= 0; i-- {
+		h = n.inheritedAfterHandlers[i]
 		err = h(w, r, params)
 		if err != nil {
 			n.handleInternalServerError(w, r, params)
