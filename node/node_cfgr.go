@@ -79,13 +79,12 @@ func (c *NodeCfgr) Wildcard(cfg func(*WildcardNodeCfgr)) {
 	}
 	rctx := c.report.Context("*")
 	n := new(c.node, WILDCARD)
-	cfg(
-		&WildcardNodeCfgr{
-			NodeCfgr{
-				node:   n,
-				report: rctx,
-			},
-		})
+	nc := NodeCfgr{
+		node:   n,
+		report: rctx,
+	}
+	cfg(&WildcardNodeCfgr{nc})
+	nc.check()
 	c.node.wildcard = n
 }
 func (c *NodeCfgr) Static(f string, cfg func(*StaticNodeCfgr)) {
@@ -96,13 +95,12 @@ func (c *NodeCfgr) Static(f string, cfg func(*StaticNodeCfgr)) {
 	}
 	rctx := c.report.Context(fmt.Sprintf("%%%s", f))
 	n := new(c.node, STATIC)
-	cfg(
-		&StaticNodeCfgr{
-			NodeCfgr{
-				node:   n,
-				report: rctx,
-			},
-		})
+	nc := NodeCfgr{
+		node:   n,
+		report: rctx,
+	}
+	cfg(&StaticNodeCfgr{nc})
+	nc.check()
 	c.node.static[f] = n
 }
 func (c *NodeCfgr) StringParam(name string, cfg func(*StringParamNodeCfgr)) {
@@ -112,13 +110,12 @@ func (c *NodeCfgr) StringParam(name string, cfg func(*StringParamNodeCfgr)) {
 	}
 	rctx := c.report.Context(fmt.Sprintf(":%s", name))
 	n := new(c.node, STRING_PARAM)
-	cfg(
-		&StringParamNodeCfgr{
-			NodeCfgr{
-				node:   n,
-				report: rctx,
-			},
-		})
+	nc := NodeCfgr{
+		node:   n,
+		report: rctx,
+	}
+	cfg(&StringParamNodeCfgr{nc})
+	nc.check()
 	c.node.param = n
 }
 func (c *NodeCfgr) IDParam(name string, cfg func(*IDParamNodeCfgr)) {
@@ -128,13 +125,12 @@ func (c *NodeCfgr) IDParam(name string, cfg func(*IDParamNodeCfgr)) {
 	}
 	rctx := c.report.Context(fmt.Sprintf(":%s", name))
 	n := new(c.node, ID_PARAM)
-	cfg(
-		&IDParamNodeCfgr{
-			NodeCfgr{
-				node:   n,
-				report: rctx,
-			},
-		})
+	nc := NodeCfgr{
+		node:   n,
+		report: rctx,
+	}
+	cfg(&IDParamNodeCfgr{nc})
+	nc.check()
 	c.node.param = n
 }
 func (c *NodeCfgr) VariantParam(name string, cfg func(*VariantParamNodeCfgr)) {
@@ -144,13 +140,12 @@ func (c *NodeCfgr) VariantParam(name string, cfg func(*VariantParamNodeCfgr)) {
 	}
 	rctx := c.report.Context(fmt.Sprintf(":%s", name))
 	n := new(c.node, VARIANT_PARAM)
-	cfg(
-		&VariantParamNodeCfgr{
-			NodeCfgr{
-				node:   n,
-				report: rctx,
-			},
-		})
+	nc := NodeCfgr{
+		node:   n,
+		report: rctx,
+	}
+	cfg(&VariantParamNodeCfgr{nc})
+	nc.check()
 	c.node.param = n
 }
 func (c *NodeCfgr) HandleNotFoundErrorWith(h Handler) {
