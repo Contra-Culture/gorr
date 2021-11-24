@@ -14,10 +14,10 @@ type (
 	Node    struct {
 		typ                            NodeType
 		parent                         *Node
-		inheritableBeforeDo            Handler
-		beforeDo                       Handler
-		afterDo                        Handler
-		inheritableAfterDo             Handler
+		inheritableBeforeHandler       Handler
+		beforeHandler                  Handler
+		afterHandler                   Handler
+		inheritableAfterHandler        Handler
 		title                          string
 		description                    string
 		methods                        map[HTTPMethod]*Method
@@ -126,7 +126,7 @@ func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 			fragments = append(fragments, f)
 		}
 	}
-	h = n.inheritableBeforeDo
+	h = n.inheritableBeforeHandler
 	if h != nil {
 		err = h(w, r, params)
 		if err != nil {
@@ -134,7 +134,7 @@ func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	h = n.inheritableAfterDo
+	h = n.inheritableAfterHandler
 	if h != nil {
 		afterHandlers = append(afterHandlers, h)
 	}
@@ -142,14 +142,14 @@ func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 		f := fragments[0]
 		n, ok = parent.static[f]
 		if ok {
-			h = n.inheritableBeforeDo
+			h = n.inheritableBeforeHandler
 			if h != nil {
-				err = n.inheritableBeforeDo(w, r, params)
+				err = n.inheritableBeforeHandler(w, r, params)
 				if err != nil {
 					n.handleInternalServerError(w, r, params)
 					return
 				}
-				h = n.inheritableAfterDo
+				h = n.inheritableAfterHandler
 				if h != nil {
 					afterHandlers = append(afterHandlers, h)
 				}
@@ -159,15 +159,15 @@ func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 		}
 		n = parent.param
 		if n != nil {
-			h = n.inheritableBeforeDo
+			h = n.inheritableBeforeHandler
 			if h != nil {
-				err = n.inheritableBeforeDo(w, r, params)
+				err = n.inheritableBeforeHandler(w, r, params)
 				if err != nil {
 					n.handleInternalServerError(w, r, params)
 					return
 				}
 			}
-			h = n.inheritableAfterDo
+			h = n.inheritableAfterHandler
 			if h != nil {
 				afterHandlers = append(afterHandlers, h)
 			}
@@ -206,15 +206,15 @@ func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 		} else {
 			n = parent.wildcard
 			if n != nil {
-				h = n.inheritableBeforeDo
+				h = n.inheritableBeforeHandler
 				if h != nil {
-					err = n.inheritableBeforeDo(w, r, params)
+					err = n.inheritableBeforeHandler(w, r, params)
 					if err != nil {
 						n.handleInternalServerError(w, r, params)
 						return
 					}
 				}
-				h = n.inheritableAfterDo
+				h = n.inheritableAfterHandler
 				if h != nil {
 					afterHandlers = append(afterHandlers, h)
 				}
@@ -230,7 +230,7 @@ func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 		n.handleMethodNotAllowedError(w, r, params)
 		return
 	}
-	h = n.beforeDo
+	h = n.beforeHandler
 	if h != nil {
 		err = h(w, r, params)
 		if err != nil {
@@ -243,7 +243,7 @@ func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 		n.handleMethodNotAllowedError(w, r, params)
 		return
 	}
-	h = n.afterDo
+	h = n.afterHandler
 	if h != nil {
 		err = h(w, r, params)
 		if err != nil {

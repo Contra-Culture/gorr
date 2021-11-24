@@ -45,32 +45,32 @@ func (c *NodeCfgr) Description(d string) {
 	c.node.description = d
 }
 func (c *NodeCfgr) BeforeDo(h Handler) {
-	if c.node.beforeDo != nil {
+	if c.node.beforeHandler != nil {
 		c.report.Error("before hook already specified")
 		return
 	}
-	c.node.beforeDo = h
+	c.node.beforeHandler = h
 }
 func (c *NodeCfgr) AfterDo(h Handler) {
-	if c.node.afterDo != nil {
+	if c.node.afterHandler != nil {
 		c.report.Error("after hook already specified")
 		return
 	}
-	c.node.afterDo = h
+	c.node.afterHandler = h
 }
 func (c *NodeCfgr) InheritableBeforeDo(h Handler) {
-	if c.node.inheritableBeforeDo != nil {
+	if c.node.inheritableBeforeHandler != nil {
 		c.report.Error("inheritable before hook already specified")
 		return
 	}
-	c.node.inheritableBeforeDo = h
+	c.node.inheritableBeforeHandler = h
 }
 func (c *NodeCfgr) InheritableAfterDo(h Handler) {
-	if c.node.inheritableAfterDo != nil {
+	if c.node.inheritableAfterHandler != nil {
 		c.report.Error("inheritable after hook already specified")
 		return
 	}
-	c.node.inheritableAfterDo = h
+	c.node.inheritableAfterHandler = h
 }
 func (c *NodeCfgr) Wildcard(cfg func(*WildcardNodeCfgr)) {
 	if c.node.wildcard != nil {
