@@ -192,8 +192,7 @@ func (n *Node) handle(w http.ResponseWriter, r *http.Request, params Params) {
 		n.handleMethodNotAllowedError(w, r, params)
 		return
 	}
-	for i := 0; i < len(n.inheritedBeforeHandlers); i++ {
-		h = n.inheritedBeforeHandlers[i]
+	for _, h = range n.inheritedBeforeHandlers {
 		err = h(w, r, params)
 		if err != nil {
 			n.handleInternalServerError(w, r, params)
