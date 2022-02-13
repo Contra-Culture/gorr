@@ -82,7 +82,7 @@ func (ps params) Set(pn string, v interface{}) (err error) {
 	ps[pn] = v
 	return
 }
-func New(cfg func(*StaticNodeCfgr)) (n *Node, r *report.RContext) {
+func New(cfg func(*StaticNodeCfgr)) (n *Node, r report.Node) {
 	r = report.New("root")
 	n = new(nil, STATIC)
 	c := &StaticNodeCfgr{

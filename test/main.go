@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/Contra-Culture/gorr"
 	"github.com/Contra-Culture/gorr/node"
+	"github.com/Contra-Culture/report"
 )
 
 func main() {
@@ -163,7 +165,25 @@ func main() {
 						})
 				})
 		})
-	fmt.Print(r.String())
-	fmt.Println()
+	var sb strings.Builder
+	fn := func(path []int, k report.Kind, s string) (err error) {
+		for range path {
+			_, err = sb.WriteRune('\t')
+			if err != nil {
+				return
+			}
+		}
+		_, err = sb.WriteString(s)
+		if err != nil {
+			return
+		}
+		_, err = sb.WriteString("\n\n")
+		return
+	}
+	err := r.Traverse(fn)
+	if err != nil {
+		return
+	}
+	fmt.Print(sb.String())
 	http.ListenAndServe(":8080", d)
 }

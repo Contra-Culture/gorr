@@ -13,7 +13,7 @@ type (
 	}
 	DispatcherCfgr struct {
 		dispatcher *Dispatcher
-		report     *report.RContext
+		report     report.Node
 	}
 	PathHelper  func(map[string]string) string
 	PathHelpers map[string]PathHelper
@@ -28,7 +28,7 @@ func (c *DispatcherCfgr) Root(d string, cfg func(*node.StaticNodeCfgr)) {
 	c.dispatcher.root = root
 	c.report = report
 }
-func New(cfg func(*DispatcherCfgr)) (d *Dispatcher, r *report.RContext) {
+func New(cfg func(*DispatcherCfgr)) (d *Dispatcher, r report.Node) {
 	d = &Dispatcher{}
 	r = report.New("dispatcher")
 	cfg(

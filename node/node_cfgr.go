@@ -1,15 +1,13 @@
 package node
 
 import (
-	"fmt"
-
 	"github.com/Contra-Culture/report"
 )
 
 type (
 	NodeCfgr struct {
 		node   *Node
-		report *report.RContext
+		report report.Node
 	}
 	WildcardNodeCfgr struct {
 		NodeCfgr
@@ -28,7 +26,7 @@ type (
 	}
 	MethodCfgr struct {
 		method *Method
-		report *report.RContext
+		report report.Node
 	}
 )
 
@@ -77,7 +75,7 @@ func (c *NodeCfgr) Wildcard(cfg func(*WildcardNodeCfgr)) {
 		c.report.Error("* node already specified")
 		return
 	}
-	rctx := c.report.Context("*")
+	rctx := c.report.Structure("*")
 	n := new(c.node, WILDCARD)
 	nc := NodeCfgr{
 		node:   n,
@@ -90,10 +88,10 @@ func (c *NodeCfgr) Wildcard(cfg func(*WildcardNodeCfgr)) {
 func (c *NodeCfgr) Static(f string, cfg func(*StaticNodeCfgr)) {
 	_, exists := c.node.static[f]
 	if exists {
-		c.report.Error(fmt.Sprintf("static \"%s\" node already specified", f))
+		c.report.Error("static \"%s\" node already specified", f)
 		return
 	}
-	rctx := c.report.Context(fmt.Sprintf("%%%s", f))
+	rctx := c.report.Structure("%%%s", f)
 	n := new(c.node, STATIC)
 	nc := NodeCfgr{
 		node:   n,
@@ -105,10 +103,10 @@ func (c *NodeCfgr) Static(f string, cfg func(*StaticNodeCfgr)) {
 }
 func (c *NodeCfgr) StringParam(name string, cfg func(*StringParamNodeCfgr)) {
 	if c.node.param != nil {
-		c.report.Error(fmt.Sprintf("param \":%s\" node already specified", name))
+		c.report.Error("param \":%s\" node already specified", name)
 		return
 	}
-	rctx := c.report.Context(fmt.Sprintf(":%s", name))
+	rctx := c.report.Structure(":%s", name)
 	n := new(c.node, STRING_PARAM)
 	nc := NodeCfgr{
 		node:   n,
@@ -120,10 +118,10 @@ func (c *NodeCfgr) StringParam(name string, cfg func(*StringParamNodeCfgr)) {
 }
 func (c *NodeCfgr) IDParam(name string, cfg func(*IDParamNodeCfgr)) {
 	if c.node.param != nil {
-		c.report.Error(fmt.Sprintf("param \":%s\" node already specified", name))
+		c.report.Error("param \":%s\" node already specified", name)
 		return
 	}
-	rctx := c.report.Context(fmt.Sprintf(":%s", name))
+	rctx := c.report.Structure(":%s", name)
 	n := new(c.node, ID_PARAM)
 	nc := NodeCfgr{
 		node:   n,
@@ -135,10 +133,10 @@ func (c *NodeCfgr) IDParam(name string, cfg func(*IDParamNodeCfgr)) {
 }
 func (c *NodeCfgr) VariantParam(name string, cfg func(*VariantParamNodeCfgr)) {
 	if c.node.param != nil {
-		c.report.Error(fmt.Sprintf("param \":%s\" node already specified", name))
+		c.report.Error("param \":%s\" node already specified", name)
 		return
 	}
-	rctx := c.report.Context(fmt.Sprintf(":%s", name))
+	rctx := c.report.Structure(":%s", name)
 	n := new(c.node, VARIANT_PARAM)
 	nc := NodeCfgr{
 		node:   n,
@@ -179,7 +177,7 @@ func (c *NodeCfgr) GET(cfg func(*MethodCfgr)) {
 	cfg(
 		&MethodCfgr{
 			method: m,
-			report: c.report.Context("GET"),
+			report: c.report.Structure("GET"),
 		})
 	c.node.methods[GET] = m
 }
@@ -193,7 +191,7 @@ func (c *NodeCfgr) POST(cfg func(*MethodCfgr)) {
 	cfg(
 		&MethodCfgr{
 			method: m,
-			report: c.report.Context("POST"),
+			report: c.report.Structure("POST"),
 		})
 	c.node.methods[POST] = m
 }
@@ -207,7 +205,7 @@ func (c *NodeCfgr) PUT(cfg func(*MethodCfgr)) {
 	cfg(
 		&MethodCfgr{
 			method: m,
-			report: c.report.Context("PUT"),
+			report: c.report.Structure("PUT"),
 		})
 	c.node.methods[PUT] = m
 }
@@ -221,7 +219,7 @@ func (c *NodeCfgr) PATCH(cfg func(*MethodCfgr)) {
 	cfg(
 		&MethodCfgr{
 			method: m,
-			report: c.report.Context("PATCH"),
+			report: c.report.Structure("PATCH"),
 		})
 	c.node.methods[PATCH] = m
 }
@@ -235,7 +233,7 @@ func (c *NodeCfgr) DELETE(cfg func(*MethodCfgr)) {
 	cfg(
 		&MethodCfgr{
 			method: m,
-			report: c.report.Context("DELETE"),
+			report: c.report.Structure("DELETE"),
 		})
 	c.node.methods[DELETE] = m
 }
@@ -249,7 +247,7 @@ func (c *NodeCfgr) HEAD(cfg func(*MethodCfgr)) {
 	cfg(
 		&MethodCfgr{
 			method: m,
-			report: c.report.Context("HEAD"),
+			report: c.report.Structure("HEAD"),
 		})
 	c.node.methods[HEAD] = m
 }
@@ -263,7 +261,7 @@ func (c *NodeCfgr) CONNECT(cfg func(*MethodCfgr)) {
 	cfg(
 		&MethodCfgr{
 			method: m,
-			report: c.report.Context("CONNECT"),
+			report: c.report.Structure("CONNECT"),
 		})
 	c.node.methods[CONNECT] = m
 }
@@ -277,7 +275,7 @@ func (c *NodeCfgr) OPTIONS(cfg func(*MethodCfgr)) {
 	cfg(
 		&MethodCfgr{
 			method: m,
-			report: c.report.Context("OPTIONS"),
+			report: c.report.Structure("OPTIONS"),
 		})
 	c.node.methods[OPTIONS] = m
 }
@@ -291,7 +289,7 @@ func (c *NodeCfgr) TRACE(cfg func(*MethodCfgr)) {
 	cfg(
 		&MethodCfgr{
 			method: m,
-			report: c.report.Context("PUT"),
+			report: c.report.Structure("PUT"),
 		})
 	c.node.methods[TRACE] = m
 }
@@ -323,7 +321,7 @@ func (c *StringParamNodeCfgr) Matcher(m func(string) bool) {
 func (c *VariantParamNodeCfgr) Variant(v string) {
 	variants := c.node.matcher.(map[string]bool)
 	if variants[v] {
-		c.report.Error(fmt.Sprintf("variant \"%s\"already specified", v))
+		c.report.Error("variant \"%s\"already specified", v)
 		return
 	}
 	variants[v] = true
