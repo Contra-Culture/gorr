@@ -163,7 +163,6 @@ func main() {
 						})
 				})
 		})
-
 	fmt.Print(report.ToString(r))
 	http.ListenAndServe(":8080", d)
 }
