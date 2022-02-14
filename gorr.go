@@ -3,13 +3,12 @@ package gorr
 import (
 	"net/http"
 
-	"github.com/Contra-Culture/gorr/node"
 	"github.com/Contra-Culture/report"
 )
 
 type (
 	Dispatcher struct {
-		root *node.Node
+		root *Node
 	}
 	DispatcherCfgr struct {
 		dispatcher *Dispatcher
@@ -19,14 +18,22 @@ type (
 	PathHelpers map[string]PathHelper
 )
 
-func (c *DispatcherCfgr) Root(d string, cfg func(*node.StaticNodeCfgr)) {
+func (c *DispatcherCfgr) Root(d string, cfg func(*StaticNodeCfgr)) {
 	if c.dispatcher.root != nil {
 		c.report.Error("root node already specified")
 		return
 	}
-	root, report := node.New(cfg)
+	r := report.New("root")
+	root := new(nil, STATIC)
+	nc := &StaticNodeCfgr{
+		NodeCfgr{
+			node:   root,
+			report: r,
+		},
+	}
+	cfg(nc)
 	c.dispatcher.root = root
-	c.report = report
+	c.report = r
 }
 func New(cfg func(*DispatcherCfgr)) (d *Dispatcher, r report.Node) {
 	d = &Dispatcher{}

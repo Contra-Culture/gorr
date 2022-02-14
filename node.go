@@ -1,12 +1,10 @@
-package node
+package gorr
 
 import (
 	"errors"
 	"fmt"
 	"net/http"
 	"strings"
-
-	"github.com/Contra-Culture/report"
 )
 
 type (
@@ -80,18 +78,6 @@ func (ps params) Set(pn string, v interface{}) (err error) {
 		return
 	}
 	ps[pn] = v
-	return
-}
-func New(cfg func(*StaticNodeCfgr)) (n *Node, r report.Node) {
-	r = report.New("root")
-	n = new(nil, STATIC)
-	c := &StaticNodeCfgr{
-		NodeCfgr{
-			node:   n,
-			report: r,
-		},
-	}
-	cfg(c)
 	return
 }
 func new(p *Node, t NodeType) (n *Node) {

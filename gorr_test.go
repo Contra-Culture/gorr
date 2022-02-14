@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	. "github.com/Contra-Culture/gorr"
-	"github.com/Contra-Culture/gorr/node"
 	"github.com/Contra-Culture/report"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -25,7 +24,7 @@ var _ = Describe("gorr", func() {
 					func(cfg *DispatcherCfgr) {
 						cfg.Root(
 							"Test root.",
-							func(cfg *node.StaticNodeCfgr) {
+							func(cfg *StaticNodeCfgr) {
 							})
 					})
 				Expect(d).NotTo(BeNil())

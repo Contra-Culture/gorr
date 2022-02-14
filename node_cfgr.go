@@ -1,4 +1,4 @@
-package node
+package gorr
 
 import (
 	"github.com/Contra-Culture/report"
