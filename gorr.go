@@ -1,9 +1,12 @@
 package gorr
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/Contra-Culture/report"
+	"github.com/google/uuid"
 )
 
 type (
@@ -46,5 +49,11 @@ func New(cfg func(*DispatcherCfgr)) (d *Dispatcher, r report.Node) {
 	return
 }
 func (d *Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	d.root.Handle(w, r)
+	rep := report.New("request <%s>", requestUUID())
+	rep.Info("URL: %s", r.URL.String())
+	d.root.Handle(rep, w, r)
+	fmt.Println(report.ToString(rep))
+}
+func requestUUID() string {
+	return strings.Replace(uuid.New().String(), "-", "", -1)
 }

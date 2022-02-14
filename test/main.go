@@ -16,40 +16,40 @@ func main() {
 				"Test root.",
 				func(root *gorr.StaticNodeCfgr) {
 					root.HandleNotFoundErrorWith(
-						func(w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
+						func(rep report.Node, w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
 							w.WriteHeader(404)
 							w.Write([]byte("not found"))
 							return
 						})
 					root.HandleMethodNotAllowedErrorWith(
-						func(w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
+						func(rep report.Node, w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
 							w.WriteHeader(404)
 							w.Write([]byte("method not allowed"))
 							return
 						})
 					root.HandleInternalServerErrorWith(
-						func(w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
+						func(rep report.Node, w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
 							w.WriteHeader(404)
 							w.Write([]byte("internal server error"))
 							return
 						})
 					root.BeforeDo(
-						func(w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
+						func(rep report.Node, w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
 							w.Write([]byte(fmt.Sprintf("<pre>root before do: %#v</pre>", params)))
 							return
 						})
 					root.InheritableBeforeDo(
-						func(w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
+						func(rep report.Node, w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
 							w.Write([]byte(fmt.Sprintf("<pre>root inheritable before do: %#v</pre>", params)))
 							return
 						})
 					root.AfterDo(
-						func(w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
+						func(rep report.Node, w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
 							fmt.Printf("\nroot after do: %#v", params)
 							return
 						})
 					root.InheritableAfterDo(
-						func(w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
+						func(rep report.Node, w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
 							fmt.Printf("\nroot inheritable after do: %#v", params)
 							return
 						})
@@ -58,7 +58,7 @@ func main() {
 							cfg.Title("welcome")
 							cfg.Description("latest content")
 							cfg.Handler(
-								func(w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
+								func(rep report.Node, w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
 									w.Write([]byte("welcome"))
 									return
 								})
@@ -69,22 +69,22 @@ func main() {
 							articles.Title("articles")
 							articles.Description("articles resource.")
 							articles.BeforeDo(
-								func(w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
+								func(rep report.Node, w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
 									w.Write([]byte(fmt.Sprintf("<pre>articles before do: %#v</pre>", params)))
 									return
 								})
 							articles.InheritableBeforeDo(
-								func(w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
+								func(rep report.Node, w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
 									w.Write([]byte(fmt.Sprintf("<pre>articles inheritable before do: %#v</pre>", params)))
 									return
 								})
 							articles.AfterDo(
-								func(w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
+								func(rep report.Node, w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
 									fmt.Printf("\narticles after do: %#v", params)
 									return
 								})
 							articles.InheritableAfterDo(
-								func(w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
+								func(rep report.Node, w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
 									fmt.Printf("\narticles inheritable after do: %#v", params)
 									return
 								})
@@ -93,7 +93,7 @@ func main() {
 									cfg.Title("all-articles")
 									cfg.Description("list of all articles, ordered by publication date")
 									cfg.Handler(
-										func(w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
+										func(rep report.Node, w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
 											w.Write([]byte("all-articles"))
 											return
 										})
@@ -104,22 +104,22 @@ func main() {
 									article.Title("article")
 									article.Description("single article resource")
 									article.BeforeDo(
-										func(w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
+										func(rep report.Node, w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
 											w.Write([]byte(fmt.Sprintf("<pre>article before do: %#v</pre>", params)))
 											return
 										})
 									article.InheritableBeforeDo(
-										func(w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
+										func(rep report.Node, w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
 											w.Write([]byte(fmt.Sprintf("<pre>article inheritable before do: %#v</pre>", params)))
 											return
 										})
 									article.AfterDo(
-										func(w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
+										func(rep report.Node, w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
 											fmt.Printf("\narticle after do: %#v", params)
 											return
 										})
 									article.InheritableAfterDo(
-										func(w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
+										func(rep report.Node, w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
 											fmt.Printf("\narticle inheritable after do: %#v", params)
 											return
 										})
@@ -142,7 +142,7 @@ func main() {
 											cfg.Title("article")
 											cfg.Description("single article full presentation")
 											cfg.Handler(
-												func(w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
+												func(rep report.Node, w http.ResponseWriter, r *http.Request, params gorr.Params) (err error) {
 													articleID, ok := params.Get("articleID")
 													if !ok {
 														w.Write([]byte(fmt.Sprintf("article: <no articleID> %#v", params)))

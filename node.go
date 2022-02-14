@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/Contra-Culture/report"
 )
 
 type (
-	Handler func(http.ResponseWriter, *http.Request, Params) error
+	Handler func(report.Node, http.ResponseWriter, *http.Request, Params) error
 	Node    struct {
 		typ                            NodeType
 		parent                         *Node
@@ -103,7 +105,7 @@ func (n *Node) Param() (string, bool) {
 }
 
 // Handles request and/or delegates it to its child.
-func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
+func (n *Node) Handle(rep report.Node, w http.ResponseWriter, r *http.Request) {
 	var (
 		ok        bool
 		params    = NewParams()
@@ -131,7 +133,7 @@ func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 					parent = n
 					continue
 				}
-				n.HandleNotFoundError(w, r, params)
+				n.handleNotFoundError(rep, w, r, params)
 				return
 			case func(string) bool:
 				params.Set(n.title, f)
@@ -139,14 +141,14 @@ func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 					parent = n
 					continue
 				}
-				n.HandleNotFoundError(w, r, params)
+				n.handleNotFoundError(rep, w, r, params)
 				return
 			case Query:
 				idParamName := fmt.Sprintf("%sID", n.title)
 				params.Set(idParamName, f)
 				v, err := matcher(params)
 				if err != nil {
-					n.HandleNotFoundError(w, r, params)
+					n.handleNotFoundError(rep, w, r, params)
 					return
 				}
 				params.Set(n.title, v)
@@ -162,117 +164,126 @@ func (n *Node) Handle(w http.ResponseWriter, r *http.Request) {
 				parent = n
 				continue
 			}
-			parent.HandleNotFoundError(w, r, params)
+			parent.handleNotFoundError(rep, w, r, params)
 			return
 		}
 	}
-	n.handle(w, r, params)
+	rep = rep.Structure("routing node (%s:%s)", n.title, nodeTypeString(n.typ))
+	n.handle(rep, w, r, params)
 }
-func (n *Node) handle(w http.ResponseWriter, r *http.Request, params Params) {
+func (n *Node) handle(rep report.Node, w http.ResponseWriter, r *http.Request, params Params) {
 	var (
 		err error
 		h   Handler
 	)
 	method, ok := n.methods[HTTPMethod(r.Method)]
 	if !ok {
-		n.handleMethodNotAllowedError(w, r, params)
+		rep.Error("method not allowed %s", r.Method)
+		n.handleMethodNotAllowedError(rep, w, r, params)
 		return
 	}
 	for _, h = range n.inheritedBeforeHandlers {
-		err = h(w, r, params)
+		err = h(rep, w, r, params)
 		if err != nil {
-			n.handleInternalServerError(w, r, params)
+			n.handleInternalServerError(rep, w, r, params)
 			return
 		}
 	}
 	h = n.inheritableBeforeHandler
 	if h != nil {
-		err = h(w, r, params)
+		err = h(rep, w, r, params)
 		if err != nil {
-			n.handleInternalServerError(w, r, params)
+			n.handleInternalServerError(rep, w, r, params)
 			return
 		}
 	}
 	h = n.beforeHandler
 	if h != nil {
-		err = h(w, r, params)
+		err = h(rep, w, r, params)
 		if err != nil {
-			n.handleInternalServerError(w, r, params)
+			n.handleInternalServerError(rep, w, r, params)
 			return
 		}
 	}
-	err = method.Handler()(w, r, params)
+	err = method.Handler()(rep, w, r, params)
 	if err != nil {
-		n.handleMethodNotAllowedError(w, r, params)
+		rep.Error("method not allowed %s", r.Method)
+		n.handleMethodNotAllowedError(rep, w, r, params)
 		return
 	}
 	h = n.afterHandler
 	if h != nil {
-		err = h(w, r, params)
+		err = h(rep, w, r, params)
 		if err != nil {
-			n.handleInternalServerError(w, r, params)
+			n.handleInternalServerError(rep, w, r, params)
 			return
 		}
 	}
 	h = n.inheritableAfterHandler
 	if h != nil {
-		err = h(w, r, params)
+		err = h(rep, w, r, params)
 		if err != nil {
-			n.handleInternalServerError(w, r, params)
+			n.handleInternalServerError(rep, w, r, params)
 			return
 		}
 	}
 	for i := len(n.inheritedAfterHandlers) - 1; i >= 0; i-- {
 		h = n.inheritedAfterHandlers[i]
-		err = h(w, r, params)
+		err = h(rep, w, r, params)
 		if err != nil {
-			n.handleInternalServerError(w, r, params)
+			n.handleInternalServerError(rep, w, r, params)
 			return
 		}
 	}
 }
-func (n *Node) handleMethodNotAllowedError(w http.ResponseWriter, r *http.Request, params Params) (err error) {
+func (n *Node) handleMethodNotAllowedError(rep report.Node, w http.ResponseWriter, r *http.Request, params Params) (err error) {
 	var handle Handler
 	for {
 		handle = n.__methodNotAllowedErrorHandler
 		if handle != nil {
-			handle(w, r, params)
+			rep.Info("method not allowed error handling: handler not found")
+			handle(rep, w, r, params)
 			return
 		}
 		n = n.parent
 		if n != nil {
 			continue
 		}
+		rep.Info("method not allowed error handling: handler not found")
 		return errors.New("method not allowed handler is not provided")
 	}
 }
-func (n *Node) HandleNotFoundError(w http.ResponseWriter, r *http.Request, params Params) (err error) {
+func (n *Node) handleNotFoundError(rep report.Node, w http.ResponseWriter, r *http.Request, params Params) (err error) {
 	var handle Handler
 	for {
 		handle = n.__notFoundErrorHandler
 		if handle != nil {
-			err = handle(w, r, params)
+			rep.Info("not found error handling: handler not found")
+			err = handle(rep, w, r, params)
 			return
 		}
 		n = n.parent
 		if n != nil {
 			continue
 		}
+		rep.Info("not found error handling: handler not found")
 		return errors.New("not found handler is not provided")
 	}
 }
-func (n *Node) handleInternalServerError(w http.ResponseWriter, r *http.Request, params Params) (err error) {
+func (n *Node) handleInternalServerError(rep report.Node, w http.ResponseWriter, r *http.Request, params Params) (err error) {
 	var handle Handler
 	for {
 		handle = n.__internalServerErrorHandler
 		if handle != nil {
-			handle(w, r, params)
+			rep.Info("internal server error handling")
+			handle(rep, w, r, params)
 			return
 		}
 		n = n.parent
 		if n != nil {
 			continue
 		}
+		rep.Info("internal server error handling: handler not found")
 		return errors.New("internal server error handler is not provided")
 	}
 }
@@ -284,4 +295,20 @@ func (m *Method) Decription() string {
 }
 func (m *Method) Handler() Handler {
 	return m.handler
+}
+func nodeTypeString(t NodeType) string {
+	switch t {
+	case STATIC:
+		return "static"
+	case STRING_PARAM:
+		return "string-param"
+	case ID_PARAM:
+		return "ID-param"
+	case VARIANT_PARAM:
+		return "variant-param"
+	case WILDCARD:
+		return "*"
+	default:
+		panic(fmt.Sprintf("wrong node type %d", int(t))) // should not occure
+	}
 }
