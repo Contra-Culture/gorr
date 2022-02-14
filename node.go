@@ -90,8 +90,12 @@ func new(p *Node, t NodeType) (n *Node) {
 		static:  map[string]*Node{},
 	}
 	if p != nil {
-		n.inheritedBeforeHandlers = append(p.inheritedBeforeHandlers, p.inheritableBeforeHandler)
-		n.inheritedAfterHandlers = append(p.inheritedAfterHandlers, p.inheritableAfterHandler)
+		if p.inheritableBeforeHandler != nil {
+			n.inheritedBeforeHandlers = append(p.inheritedBeforeHandlers, p.inheritableBeforeHandler)
+		}
+		if p.inheritableAfterHandler != nil {
+			n.inheritedAfterHandlers = append(p.inheritedAfterHandlers, p.inheritableAfterHandler)
+		}
 	}
 	return
 }
