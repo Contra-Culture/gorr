@@ -21,10 +21,10 @@ type (
 		inheritableAfterHandler        Handler
 		inheritedAfterHandlers         []Handler
 		methods                        map[HTTPMethod]*Method
-		static                         map[string]*Node
-		param                          *Node
-		wildcard                       *Node
-		matcher                        interface{} // interface{} is string, map[string]bool, func(string) bool or Query
+		static                         map[string]*Node // nested static fragment nodes (Priority: 1)
+		param                          *Node            // nested param node (Priority: 2)
+		wildcard                       *Node            // nested wildcard node (Priority: 3)
+		matcher                        interface{}      // interface{} is string, map[string]bool, func(string) bool or Query
 		__notFoundErrorHandler         Handler
 		__methodNotAllowedErrorHandler Handler
 		__internalServerErrorHandler   Handler
@@ -123,13 +123,16 @@ func (n *Node) Handle(rep report.Node, w http.ResponseWriter, r *http.Request) {
 	}
 	for ; len(fragments) > 0; fragments = fragments[1:] {
 		f := fragments[0]
+		rep.Info("fragment %s of fragments: %s", f, strings.Join(fragments, "/"))
 		n, ok = parent.static[f]
 		if ok {
+			rep.Info("static node `%s` picked", f)
 			parent = n
 			continue
 		}
 		n = parent.param
 		if n != nil {
+			rep.Info("param node `:%s` picked", f)
 			switch matcher := n.matcher.(type) {
 			case map[string]bool:
 				params.Set(n.title, f)
@@ -174,6 +177,7 @@ func (n *Node) Handle(rep report.Node, w http.ResponseWriter, r *http.Request) {
 	}
 	rep = rep.Structure("routing node (%s:%s)", n.title, nodeTypeString(n.typ))
 	n.handle(rep, w, r, params)
+	rep.Finalize()
 }
 func (n *Node) handle(rep report.Node, w http.ResponseWriter, r *http.Request, params Params) {
 	var (
@@ -189,6 +193,7 @@ func (n *Node) handle(rep report.Node, w http.ResponseWriter, r *http.Request, p
 	for _, h = range n.inheritedBeforeHandlers {
 		err = h(rep, w, r, params)
 		if err != nil {
+			rep.Error("internal server error: %s", err.Error())
 			n.handleInternalServerError(rep, w, r, params)
 			return
 		}
@@ -197,6 +202,7 @@ func (n *Node) handle(rep report.Node, w http.ResponseWriter, r *http.Request, p
 	if h != nil {
 		err = h(rep, w, r, params)
 		if err != nil {
+			rep.Error("internal server error: %s", err.Error())
 			n.handleInternalServerError(rep, w, r, params)
 			return
 		}
@@ -205,6 +211,7 @@ func (n *Node) handle(rep report.Node, w http.ResponseWriter, r *http.Request, p
 	if h != nil {
 		err = h(rep, w, r, params)
 		if err != nil {
+			rep.Error("internal server error: %s", err.Error())
 			n.handleInternalServerError(rep, w, r, params)
 			return
 		}
@@ -219,6 +226,7 @@ func (n *Node) handle(rep report.Node, w http.ResponseWriter, r *http.Request, p
 	if h != nil {
 		err = h(rep, w, r, params)
 		if err != nil {
+			rep.Error("internal server error: %s", err.Error())
 			n.handleInternalServerError(rep, w, r, params)
 			return
 		}
@@ -227,6 +235,7 @@ func (n *Node) handle(rep report.Node, w http.ResponseWriter, r *http.Request, p
 	if h != nil {
 		err = h(rep, w, r, params)
 		if err != nil {
+			rep.Error("internal server error: %s", err.Error())
 			n.handleInternalServerError(rep, w, r, params)
 			return
 		}
@@ -235,6 +244,7 @@ func (n *Node) handle(rep report.Node, w http.ResponseWriter, r *http.Request, p
 		h = n.inheritedAfterHandlers[i]
 		err = h(rep, w, r, params)
 		if err != nil {
+			rep.Error("internal server error: %s", err.Error())
 			n.handleInternalServerError(rep, w, r, params)
 			return
 		}

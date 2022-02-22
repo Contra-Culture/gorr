@@ -51,10 +51,11 @@ func New(cfg func(*DispatcherCfgr)) (d *Dispatcher, r report.Node) {
 }
 func (d *Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	rep := report.New("Request ID: %s", requestUUID())
+	defer rep.Finalize()
+	defer fmt.Println(report.ToString(rep))
 	rep.Info("URL: %s, Method: %s", r.URL.String(), r.Method)
-	d.root.Handle(rep, w, r)
-	rep.Finalize()
-	fmt.Println(report.ToString(rep))
+	child := rep.Structure("root route")
+	d.root.Handle(child, w, r)
 }
 func requestUUID() string {
 	return strings.Replace(uuid.New().String(), "-", "", -1)
