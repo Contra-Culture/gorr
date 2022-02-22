@@ -179,7 +179,7 @@ func (n *Node) Handle(rep report.Node, w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	child := rep.Structure("node (%s:%s)", n.title, nodeTypeString(n.typ))
+	child := rep.Structure("leaf node (%s:%s)", n.title, nodeTypeString(n.typ))
 	n.handle(child, w, r, params)
 	child.Finalize()
 	rep.Finalize()
@@ -198,7 +198,7 @@ func (n *Node) handle(rep report.Node, w http.ResponseWriter, r *http.Request, p
 	for _, h = range n.inheritedBeforeHandlers {
 		err = h(rep, w, r, params)
 		if err != nil {
-			rep.Error("internal server error: %s", err.Error())
+			rep.Error("inheritedBeforeHandlers> internal server error: %s", err.Error())
 			n.handleInternalServerError(rep, w, r, params)
 			return
 		}
@@ -207,7 +207,7 @@ func (n *Node) handle(rep report.Node, w http.ResponseWriter, r *http.Request, p
 	if h != nil {
 		err = h(rep, w, r, params)
 		if err != nil {
-			rep.Error("internal server error: %s", err.Error())
+			rep.Error("inheritableBeforeHandler> internal server error: %s", err.Error())
 			n.handleInternalServerError(rep, w, r, params)
 			return
 		}
@@ -216,14 +216,14 @@ func (n *Node) handle(rep report.Node, w http.ResponseWriter, r *http.Request, p
 	if h != nil {
 		err = h(rep, w, r, params)
 		if err != nil {
-			rep.Error("internal server error: %s", err.Error())
+			rep.Error("beforeHandler> internal server error: %s", err.Error())
 			n.handleInternalServerError(rep, w, r, params)
 			return
 		}
 	}
 	err = method.Handler()(rep, w, r, params)
 	if err != nil {
-		rep.Error("internal server error %s", r.Method)
+		rep.Error("Handler> internal server error %s", err.Error())
 		n.handleInternalServerError(rep, w, r, params)
 		return
 	}
@@ -231,7 +231,7 @@ func (n *Node) handle(rep report.Node, w http.ResponseWriter, r *http.Request, p
 	if h != nil {
 		err = h(rep, w, r, params)
 		if err != nil {
-			rep.Error("internal server error: %s", err.Error())
+			rep.Error("afterHandler> internal server error: %s", err.Error())
 			n.handleInternalServerError(rep, w, r, params)
 			return
 		}
@@ -240,7 +240,7 @@ func (n *Node) handle(rep report.Node, w http.ResponseWriter, r *http.Request, p
 	if h != nil {
 		err = h(rep, w, r, params)
 		if err != nil {
-			rep.Error("internal server error: %s", err.Error())
+			rep.Error("ineritableAfterHandler> internal server error: %s", err.Error())
 			n.handleInternalServerError(rep, w, r, params)
 			return
 		}
@@ -249,7 +249,7 @@ func (n *Node) handle(rep report.Node, w http.ResponseWriter, r *http.Request, p
 		h = n.inheritedAfterHandlers[i]
 		err = h(rep, w, r, params)
 		if err != nil {
-			rep.Error("internal server error: %s", err.Error())
+			rep.Error("inheritedAfterHandlers> internal server error: %s", err.Error())
 			n.handleInternalServerError(rep, w, r, params)
 			return
 		}
