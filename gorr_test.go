@@ -3,6 +3,7 @@ package gorr_test
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	. "github.com/Contra-Culture/gorr"
 	"github.com/Contra-Culture/report"
@@ -30,7 +31,7 @@ var _ = Describe("gorr", func() {
 				Expect(d).NotTo(BeNil())
 				Expect(r).NotTo(BeNil())
 				var sb strings.Builder
-				fn := func(path []int, k report.Kind, s string) (err error) {
+				fn := func(path []int, k report.Kind, _ time.Time, _ *time.Duration, s string) (err error) {
 					for range path {
 						_, err = sb.WriteRune('\t')
 						if err != nil {
