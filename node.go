@@ -223,8 +223,8 @@ func (n *Node) handle(rep report.Node, w http.ResponseWriter, r *http.Request, p
 	}
 	err = method.Handler()(rep, w, r, params)
 	if err != nil {
-		rep.Error("method not allowed %s", r.Method)
-		n.handleMethodNotAllowedError(rep, w, r, params)
+		rep.Error("internal server error %s", r.Method)
+		n.handleInternalServerError(rep, w, r, params)
 		return
 	}
 	h = n.afterHandler
