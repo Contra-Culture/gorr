@@ -135,6 +135,7 @@ func (n *Node) Handle(rep report.Node, w http.ResponseWriter, r *http.Request) {
 			rep.Info("param node `:%s` picked", f)
 			switch matcher := n.matcher.(type) {
 			case map[string]bool:
+				rep.Info("map[string]bool matcher picked")
 				params.Set(n.title, f)
 				if matcher[f] {
 					parent = n
@@ -143,6 +144,7 @@ func (n *Node) Handle(rep report.Node, w http.ResponseWriter, r *http.Request) {
 				n.handleNotFoundError(rep, w, r, params)
 				return
 			case func(string) bool:
+				rep.Info("func(string) bool matcher picked")
 				params.Set(n.title, f)
 				if matcher(f) {
 					parent = n
@@ -151,6 +153,7 @@ func (n *Node) Handle(rep report.Node, w http.ResponseWriter, r *http.Request) {
 				n.handleNotFoundError(rep, w, r, params)
 				return
 			case Query:
+				rep.Info("Query matcher picked")
 				idParamName := fmt.Sprintf("%sID", n.title)
 				params.Set(idParamName, f)
 				v, err := matcher(params)
@@ -162,8 +165,9 @@ func (n *Node) Handle(rep report.Node, w http.ResponseWriter, r *http.Request) {
 				parent = n
 				continue
 			default:
-				parent = n
-				continue
+				rep.Error("wrong param matcher type")
+				n.handleNotFoundError(rep, w, r, params)
+				return
 			}
 		} else {
 			n = parent.wildcard
@@ -175,8 +179,9 @@ func (n *Node) Handle(rep report.Node, w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	rep = rep.Structure("routing node (%s:%s)", n.title, nodeTypeString(n.typ))
-	n.handle(rep, w, r, params)
+	child := rep.Structure("node (%s:%s)", n.title, nodeTypeString(n.typ))
+	n.handle(child, w, r, params)
+	child.Finalize()
 	rep.Finalize()
 }
 func (n *Node) handle(rep report.Node, w http.ResponseWriter, r *http.Request, params Params) {
