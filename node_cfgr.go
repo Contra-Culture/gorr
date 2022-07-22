@@ -299,6 +299,9 @@ func (c *NodeCfgr) TRACE(cfg func(*MethodCfgr)) {
 	c.node.methods[TRACE] = m
 }
 func (c *NodeCfgr) check() {
+	if len(c.node.name) == 0 {
+		c.report.Error("node name is not specified")
+	}
 	if len(c.node.title) == 0 {
 		c.report.Error("node title is not specified")
 	}

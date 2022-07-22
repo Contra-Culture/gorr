@@ -138,7 +138,6 @@ outer:
 			switch matcher := n.matcher.(type) {
 			case []string:
 				rep.Info("[]string matcher picked")
-				fmt.Printf("\n\ndebug: node: %#v | name: \"%s\" | fragment: \"%s\"\n\n", n, n.name, f)
 				params.Set(n.name, f)
 				for _, v := range matcher {
 					if v == f {
@@ -150,7 +149,6 @@ outer:
 				return
 			case func(string) bool:
 				rep.Info("func(string) bool matcher picked")
-				fmt.Printf("\n\ndebug: node: %#v | name: \"%s\" | fragment: \"%s\"\n\n", n, n.name, f)
 				params.Set(n.name, f)
 				if matcher(f) {
 					parent = n
@@ -161,14 +159,12 @@ outer:
 			case Query:
 				rep.Info("Query matcher picked")
 				idParamName := fmt.Sprintf("%sID", n.name)
-				fmt.Printf("\n\ndebug: node: %#v | name: \"%s\" | fragment: \"%s\"\n\n", n, n.name, f)
 				params.Set(idParamName, f)
 				v, err := matcher(params)
 				if err != nil {
 					n.handleNotFoundError(rep, w, r, params)
 					return
 				}
-				fmt.Printf("\n\ndebug: node: %#v | name: \"%s\" | fragment: \"%s\"\n\n", n, n.name, f)
 				params.Set(n.name, v)
 				parent = n
 				continue outer
@@ -187,7 +183,7 @@ outer:
 			return
 		}
 	}
-	child := rep.Structure("leaf node (%s:%s)", n.title, nodeTypeString(n.typ))
+	child := rep.Structure("leaf node (%s:%s)", n.name, nodeTypeString(n.typ))
 	n.handle(child, w, r, params)
 	child.Finalize()
 	rep.Finalize()
