@@ -28,6 +28,7 @@ type (
 		__notFoundErrorHandler         Handler
 		__methodNotAllowedErrorHandler Handler
 		__internalServerErrorHandler   Handler
+		name                           string
 		title                          string
 		description                    string
 	}
@@ -136,7 +137,7 @@ func (n *Node) Handle(rep report.Node, w http.ResponseWriter, r *http.Request) {
 			switch matcher := n.matcher.(type) {
 			case map[string]bool:
 				rep.Info("map[string]bool matcher picked")
-				params.Set(n.parent.title, f)
+				params.Set(n.name, f)
 				if matcher[f] {
 					parent = n
 					continue
@@ -145,7 +146,7 @@ func (n *Node) Handle(rep report.Node, w http.ResponseWriter, r *http.Request) {
 				return
 			case func(string) bool:
 				rep.Info("func(string) bool matcher picked")
-				params.Set(n.parent.title, f)
+				params.Set(n.name, f)
 				if matcher(f) {
 					parent = n
 					continue
@@ -154,14 +155,14 @@ func (n *Node) Handle(rep report.Node, w http.ResponseWriter, r *http.Request) {
 				return
 			case Query:
 				rep.Info("Query matcher picked")
-				idParamName := fmt.Sprintf("%sID", n.title)
+				idParamName := fmt.Sprintf("%sID", n.name)
 				params.Set(idParamName, f)
 				v, err := matcher(params)
 				if err != nil {
 					n.handleNotFoundError(rep, w, r, params)
 					return
 				}
-				params.Set(n.parent.title, v)
+				params.Set(n.title, v)
 				parent = n
 				continue
 			default:

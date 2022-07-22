@@ -108,6 +108,7 @@ func (c *NodeCfgr) StringParam(name string, cfg func(*StringParamNodeCfgr)) {
 	}
 	rctx := c.report.Structure(":%s", name)
 	n := new(c.node, STRING_PARAM)
+	n.name = name
 	nc := NodeCfgr{
 		node:   n,
 		report: rctx,
@@ -123,6 +124,7 @@ func (c *NodeCfgr) IDParam(name string, cfg func(*IDParamNodeCfgr)) {
 	}
 	rctx := c.report.Structure(":%s", name)
 	n := new(c.node, ID_PARAM)
+	n.name = name
 	nc := NodeCfgr{
 		node:   n,
 		report: rctx,
@@ -138,6 +140,7 @@ func (c *NodeCfgr) VariantParam(name string, cfg func(*VariantParamNodeCfgr)) {
 	}
 	rctx := c.report.Structure(":%s", name)
 	n := new(c.node, VARIANT_PARAM)
+	n.name = name
 	nc := NodeCfgr{
 		node:   n,
 		report: rctx,
