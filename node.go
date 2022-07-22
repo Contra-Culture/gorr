@@ -122,6 +122,7 @@ func (n *Node) Handle(rep report.Node, w http.ResponseWriter, r *http.Request) {
 			fragments = append(fragments, f)
 		}
 	}
+outer:
 	for ; len(fragments) > 0; fragments = fragments[1:] {
 		f := fragments[0]
 		rep.Info("fragment %s of fragments: %s", f, strings.Join(fragments, "/"))
@@ -129,42 +130,48 @@ func (n *Node) Handle(rep report.Node, w http.ResponseWriter, r *http.Request) {
 		if ok {
 			rep.Info("static node `%s` picked", f)
 			parent = n
-			continue
+			continue outer
 		}
 		n = parent.param
 		if n != nil {
 			rep.Info("param node `:%s` picked", f)
 			switch matcher := n.matcher.(type) {
-			case map[string]bool:
-				rep.Info("map[string]bool matcher picked")
+			case []string:
+				rep.Info("[]string matcher picked")
+				fmt.Printf("\n\ndebug: node: %#v | name: \"%s\" | fragment: \"%s\"\n\n", n, n.name, f)
 				params.Set(n.name, f)
-				if matcher[f] {
-					parent = n
-					continue
+				for _, v := range matcher {
+					if v == f {
+						parent = n
+						continue outer
+					}
 				}
 				n.handleNotFoundError(rep, w, r, params)
 				return
 			case func(string) bool:
 				rep.Info("func(string) bool matcher picked")
+				fmt.Printf("\n\ndebug: node: %#v | name: \"%s\" | fragment: \"%s\"\n\n", n, n.name, f)
 				params.Set(n.name, f)
 				if matcher(f) {
 					parent = n
-					continue
+					continue outer
 				}
 				n.handleNotFoundError(rep, w, r, params)
 				return
 			case Query:
 				rep.Info("Query matcher picked")
 				idParamName := fmt.Sprintf("%sID", n.name)
+				fmt.Printf("\n\ndebug: node: %#v | name: \"%s\" | fragment: \"%s\"\n\n", n, n.name, f)
 				params.Set(idParamName, f)
 				v, err := matcher(params)
 				if err != nil {
 					n.handleNotFoundError(rep, w, r, params)
 					return
 				}
-				params.Set(n.title, v)
+				fmt.Printf("\n\ndebug: node: %#v | name: \"%s\" | fragment: \"%s\"\n\n", n, n.name, f)
+				params.Set(n.name, v)
 				parent = n
-				continue
+				continue outer
 			default:
 				rep.Error("wrong param matcher type")
 				n.handleNotFoundError(rep, w, r, params)
@@ -174,7 +181,7 @@ func (n *Node) Handle(rep report.Node, w http.ResponseWriter, r *http.Request) {
 			n = parent.wildcard
 			if n != nil {
 				parent = n
-				continue
+				continue outer
 			}
 			parent.handleNotFoundError(rep, w, r, params)
 			return

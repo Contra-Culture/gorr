@@ -77,6 +77,7 @@ func (c *NodeCfgr) Wildcard(cfg func(*WildcardNodeCfgr)) {
 	}
 	rctx := c.report.Structure("*")
 	n := new(c.node, WILDCARD)
+	n.name = "*"
 	nc := NodeCfgr{
 		node:   n,
 		report: rctx,
@@ -93,6 +94,7 @@ func (c *NodeCfgr) Static(f string, cfg func(*StaticNodeCfgr)) {
 	}
 	rctx := c.report.Structure("%%%s", f)
 	n := new(c.node, STATIC)
+	n.name = "static:" + f
 	nc := NodeCfgr{
 		node:   n,
 		report: rctx,
@@ -307,13 +309,6 @@ func (c *NodeCfgr) check() {
 		c.report.Error("node has neither methods nor children nodes specified")
 	}
 }
-func (c *StaticNodeCfgr) Fragment(f string) {
-	if c.node.matcher != nil {
-		c.report.Error("fragment already specified")
-		return
-	}
-	c.node.matcher = f
-}
 func (c *StringParamNodeCfgr) Matcher(m func(string) bool) {
 	if c.node.matcher != nil {
 		c.report.Error("fragment already specified")
@@ -321,13 +316,12 @@ func (c *StringParamNodeCfgr) Matcher(m func(string) bool) {
 	}
 	c.node.matcher = m
 }
-func (c *VariantParamNodeCfgr) Variant(v string) {
-	variants := c.node.matcher.(map[string]bool)
-	if variants[v] {
-		c.report.Error("variant \"%s\"already specified", v)
+func (c *VariantParamNodeCfgr) Variants(vs ...string) {
+	if c.node.matcher != nil {
+		c.report.Error("matcher already specified")
 		return
 	}
-	variants[v] = true
+	c.node.matcher = vs
 }
 func (c *IDParamNodeCfgr) Query(q Query) {
 	if c.node.matcher != nil {
