@@ -136,7 +136,7 @@ func (n *Node) Handle(rep report.Node, w http.ResponseWriter, r *http.Request) {
 			switch matcher := n.matcher.(type) {
 			case map[string]bool:
 				rep.Info("map[string]bool matcher picked")
-				params.Set(n.title, f)
+				params.Set(n.parent.title, f)
 				if matcher[f] {
 					parent = n
 					continue
@@ -145,7 +145,7 @@ func (n *Node) Handle(rep report.Node, w http.ResponseWriter, r *http.Request) {
 				return
 			case func(string) bool:
 				rep.Info("func(string) bool matcher picked")
-				params.Set(n.title, f)
+				params.Set(n.parent.title, f)
 				if matcher(f) {
 					parent = n
 					continue
@@ -161,7 +161,7 @@ func (n *Node) Handle(rep report.Node, w http.ResponseWriter, r *http.Request) {
 					n.handleNotFoundError(rep, w, r, params)
 					return
 				}
-				params.Set(n.title, v)
+				params.Set(n.parent.title, v)
 				parent = n
 				continue
 			default:
